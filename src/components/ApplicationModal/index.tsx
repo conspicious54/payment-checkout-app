@@ -66,6 +66,10 @@ export function ApplicationModal({
       if (settings) {
         console.log('Form settings loaded from database:', settings);
         setFormSettings(settings);
+        // Reset to step 1 when settings load to ensure correct flow
+        setStep(1);
+        setShowPhoneVerification(false);
+        setPhoneVerified(false);
       } else {
         console.warn('Form settings not loaded, using defaults. Check Supabase connection.');
       }
@@ -128,10 +132,10 @@ export function ApplicationModal({
     }
     if (formSettings.phoneEnabled) {
       currentFieldStep++;
-      if (step === 2) {
+    if (step === 2) {
         // After phone number, show phone verification if enabled
         if (formSettings.phoneVerificationEnabled) {
-          setShowPhoneVerification(true);
+      setShowPhoneVerification(true);
         } else {
           // Skip verification, go to name
           setStep(3);
@@ -147,7 +151,7 @@ export function ApplicationModal({
         // Skip SSN, go to bank account or payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
-        } else {
+    } else {
           setShowPaymentScreen(true);
         }
       }

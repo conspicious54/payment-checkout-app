@@ -1,11 +1,11 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { PaymentPlan, CreditTier, PaymentFrequency } from '../../constants';
 import { IdentityVerificationStep } from './IdentityVerificationStep';
 import { PhoneVerificationStep } from './PhoneVerificationStep';
 import { BankAccountStep } from './BankAccountStep';
 import { PaymentStep } from './PaymentStep';
-import { submitApplication } from '../../utils/supabase';
+import { submitApplication, fetchFormSettings, type FormSettings } from '../../utils/supabase';
 import { useLoadingState } from '../../utils/loadingStates';
 import { LoadingSpinner } from '../LoadingSpinner';
 
@@ -51,27 +51,114 @@ export function ApplicationModal({
     consentAgreed: boolean;
     agreementVersion: string;
   } | undefined>(undefined);
+  const [formSettings, setFormSettings] = useState<FormSettings>({
+    emailEnabled: true,
+    phoneEnabled: true,
+    phoneVerificationEnabled: true,
+    ssnEnabled: true,
+    bankAccountEnabled: true,
+  });
 
-  const totalSteps = 4;
+  // Fetch form settings on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      const settings = await fetchFormSettings();
+      if (settings) {
+        setFormSettings(settings);
+      }
+    };
+    loadSettings();
+  }, []);
+
+  // Calculate total steps based on enabled fields
+  const totalSteps = useMemo(() => {
+    let steps = 0;
+    if (formSettings.emailEnabled) steps++;
+    if (formSettings.phoneEnabled) steps++;
+    // Name is always required
+    steps++;
+    if (formSettings.ssnEnabled) steps++;
+    return steps;
+  }, [formSettings]);
+
+  // Calculate which step number we're on based on enabled fields
+  const getCurrentStepNumber = useCallback((step: number) => {
+    let currentStep = 0;
+    if (formSettings.emailEnabled) {
+      currentStep++;
+      if (step === 1) return currentStep;
+    }
+    if (formSettings.phoneEnabled) {
+      currentStep++;
+      if (step === 2) return currentStep;
+    }
+    // Name step
+    currentStep++;
+    if (step === 3) return currentStep;
+    if (formSettings.ssnEnabled) {
+      currentStep++;
+      if (step === 4) return currentStep;
+    }
+    return currentStep;
+  }, [formSettings]);
+
   const needsBankAccount = useMemo(
-    () => creditTier === 'below-600' || plan.months >= 6,
-    [creditTier, plan.months]
+    () => (creditTier === 'below-600' || plan.months >= 6) && formSettings.bankAccountEnabled,
+    [creditTier, plan.months, formSettings.bankAccountEnabled]
   );
 
   const handleNext = useCallback(() => {
-    if (step === 2) {
-      // After phone number, show phone verification
-      setShowPhoneVerification(true);
-    } else if (step < totalSteps) {
-      setStep(step + 1);
-    } else {
+    // Determine which field step we're on
+    let currentFieldStep = 0;
+    if (formSettings.emailEnabled) {
+      currentFieldStep++;
+      if (step === 1) {
+        // After email, go to next enabled field
+        if (formSettings.phoneEnabled) {
+          setStep(2);
+        } else {
+          // Skip to name
+          setStep(3);
+        }
+        return;
+      }
+    }
+    if (formSettings.phoneEnabled) {
+      currentFieldStep++;
+      if (step === 2) {
+        // After phone number, show phone verification if enabled
+        if (formSettings.phoneVerificationEnabled) {
+          setShowPhoneVerification(true);
+        } else {
+          // Skip verification, go to name
+          setStep(3);
+        }
+        return;
+      }
+    }
+    // Name step (always step 3)
+    if (step === 3) {
+      if (formSettings.ssnEnabled) {
+        setStep(4);
+      } else {
+        // Skip SSN, go to bank account or payment
+        if (needsBankAccount) {
+          setShowBankAccountScreen(true);
+        } else {
+          setShowPaymentScreen(true);
+        }
+      }
+      return;
+    }
+    // SSN step (step 4)
+    if (step === 4) {
       if (needsBankAccount) {
         setShowBankAccountScreen(true);
       } else {
         setShowPaymentScreen(true);
       }
     }
-  }, [step, totalSteps, needsBankAccount]);
+  }, [step, formSettings, needsBankAccount]);
 
   const handlePhoneVerify = useCallback((code: string) => {
     // TODO: Verify code with backend API
@@ -79,7 +166,8 @@ export function ApplicationModal({
     // For now, just mark as verified
     setPhoneVerified(true);
     setShowPhoneVerification(false);
-    setStep(3); // Move to name step
+    // Move to name step (step 3)
+    setStep(3);
   }, []);
 
   const handleResendCode = useCallback(() => {
@@ -234,7 +322,7 @@ export function ApplicationModal({
             onBankDataChange={handleBankDataChange}
             onNext={handleBankAccountNext}
           />
-        ) : showPhoneVerification ? (
+        ) : showPhoneVerification && formSettings.phoneVerificationEnabled ? (
           <PhoneVerificationStep
             phone={formData.phone}
             onVerify={handlePhoneVerify}
@@ -248,6 +336,7 @@ export function ApplicationModal({
             onInputChange={handleInputChange}
             onNext={handleNext}
             needsBankAccount={needsBankAccount}
+            formSettings={formSettings}
           />
         )}
       </div>

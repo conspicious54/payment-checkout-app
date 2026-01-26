@@ -5,6 +5,7 @@ import {
   validateName,
   validateSSN,
 } from '../../utils/validation';
+import type { FormSettings } from '../../utils/supabase';
 
 interface IdentityVerificationStepProps {
   step: number;
@@ -18,6 +19,7 @@ interface IdentityVerificationStepProps {
   onInputChange: (field: keyof IdentityVerificationStepProps['formData'], value: string) => void;
   onNext: () => void;
   needsBankAccount: boolean;
+  formSettings: FormSettings;
 }
 
 export function IdentityVerificationStep({
@@ -27,24 +29,47 @@ export function IdentityVerificationStep({
   onInputChange,
   onNext,
   needsBankAccount,
+  formSettings,
 }: IdentityVerificationStepProps) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
+  // Determine which field we're actually on based on enabled settings
+  const getActualField = useMemo(() => {
+    let fieldStep = 0;
+    if (formSettings.emailEnabled) {
+      fieldStep++;
+      if (step === fieldStep) return 'email';
+    }
+    if (formSettings.phoneEnabled) {
+      fieldStep++;
+      if (step === fieldStep) return 'phone';
+    }
+    // Name is always step 3
+    fieldStep++;
+    if (step === fieldStep) return 'fullName';
+    if (formSettings.ssnEnabled) {
+      fieldStep++;
+      if (step === fieldStep) return 'ssn';
+    }
+    return '';
+  }, [step, formSettings]);
+
   // Calculate validation without setting state during render
   const validationResult = useMemo(() => {
-    switch (step) {
-      case 1:
+    const field = getActualField;
+    switch (field) {
+      case 'email':
         return validateEmail(formData.email);
-      case 2:
+      case 'phone':
         return validatePhone(formData.phone);
-      case 3:
+      case 'fullName':
         return validateName(formData.fullName);
-      case 4:
+      case 'ssn':
         return validateSSN(formData.ssn);
       default:
         return { isValid: false, errors: {} };
     }
-  }, [step, formData.email, formData.phone, formData.fullName, formData.ssn]);
+  }, [getActualField, formData.email, formData.phone, formData.fullName, formData.ssn]);
 
   const isStepValid = validationResult.isValid;
 
@@ -71,17 +96,7 @@ export function IdentityVerificationStep({
     }
   };
 
-  const getCurrentField = () => {
-    switch (step) {
-      case 1: return 'email';
-      case 2: return 'phone';
-      case 3: return 'fullName';
-      case 4: return 'ssn';
-      default: return '';
-    }
-  };
-
-  const currentField = getCurrentField();
+  const currentField = getActualField;
   const showErrors = touched[currentField] || false;
 
   return (
@@ -104,7 +119,7 @@ export function IdentityVerificationStep({
       </div>
 
       <div className="mb-8">
-        {step === 1 && (
+        {getActualField === 'email' && formSettings.emailEnabled && (
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
               EMAIL ADDRESS
@@ -135,7 +150,7 @@ export function IdentityVerificationStep({
           </div>
         )}
 
-        {step === 2 && (
+        {getActualField === 'phone' && formSettings.phoneEnabled && (
           <div>
             <label htmlFor="phone" className="block text-sm font-medium mb-2">
               PHONE NUMBER
@@ -194,7 +209,7 @@ export function IdentityVerificationStep({
           </div>
         )}
 
-        {step === 3 && (
+        {getActualField === 'fullName' && (
           <div>
             <label htmlFor="fullName" className="block text-sm font-medium mb-2">
               FULL NAME
@@ -225,7 +240,7 @@ export function IdentityVerificationStep({
           </div>
         )}
 
-        {step === 4 && (
+        {getActualField === 'ssn' && formSettings.ssnEnabled && (
           <div>
             <label htmlFor="ssn" className="block text-sm font-medium mb-2">
               LAST 4 DIGITS OF SSN
@@ -266,7 +281,7 @@ export function IdentityVerificationStep({
         aria-label={step === totalSteps ? (needsBankAccount ? 'Continue to Bank Account' : 'Continue to Payment') : 'Continue to next step'}
       >
         {step === totalSteps
-          ? needsBankAccount
+          ? needsBankAccount && formSettings.bankAccountEnabled
             ? 'Continue to Bank Account'
             : 'Continue to Payment'
           : 'Continue'}

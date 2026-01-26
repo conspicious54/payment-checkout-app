@@ -120,3 +120,43 @@ SELECT
 FROM payment_plans
 WHERE is_active = true
 ORDER BY credit_tier, display_order;
+
+-- 10. Create Form Settings Table
+CREATE TABLE IF NOT EXISTS form_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  setting_key TEXT UNIQUE NOT NULL,
+  setting_value BOOLEAN NOT NULL DEFAULT true,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 11. Create Index for Form Settings
+CREATE INDEX IF NOT EXISTS idx_form_settings_key ON form_settings(setting_key);
+
+-- 12. Create Trigger for Form Settings
+CREATE TRIGGER update_form_settings_updated_at
+  BEFORE UPDATE ON form_settings
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- 13. Enable RLS for Form Settings
+ALTER TABLE form_settings ENABLE ROW LEVEL SECURITY;
+
+-- 14. Create RLS Policies for Form Settings
+CREATE POLICY "Form settings are viewable by everyone"
+  ON form_settings FOR SELECT
+  USING (true);
+
+CREATE POLICY "Form settings can be updated by service role"
+  ON form_settings FOR UPDATE
+  USING (true);
+
+-- 15. Insert Default Form Settings
+INSERT INTO form_settings (setting_key, setting_value, description) VALUES
+  ('email_enabled', true, 'Enable/disable email field in application form'),
+  ('phone_enabled', true, 'Enable/disable phone number field in application form'),
+  ('phone_verification_enabled', true, 'Enable/disable phone verification step'),
+  ('ssn_enabled', true, 'Enable/disable SSN (last 4 digits) field in application form'),
+  ('bank_account_enabled', true, 'Enable/disable bank account verification step')
+ON CONFLICT (setting_key) DO NOTHING;

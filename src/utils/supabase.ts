@@ -66,6 +66,76 @@ export async function fetchPaymentPlans(creditTier: CreditTier): Promise<Payment
   }
 }
 
+// Form Settings interface
+export interface FormSettings {
+  emailEnabled: boolean;
+  phoneEnabled: boolean;
+  phoneVerificationEnabled: boolean;
+  ssnEnabled: boolean;
+  bankAccountEnabled: boolean;
+}
+
+/**
+ * Fetch form settings from database
+ * @returns Form settings object or null if error
+ */
+export async function fetchFormSettings(): Promise<FormSettings | null> {
+  if (!supabase) {
+    console.warn('Supabase not configured. Using default form settings.');
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('form_settings')
+      .select('setting_key, setting_value');
+
+    if (error) {
+      console.error('Error fetching form settings:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('No form settings found. Using defaults.');
+      return null;
+    }
+
+    // Convert array to object with default values
+    const settings: FormSettings = {
+      emailEnabled: true,
+      phoneEnabled: true,
+      phoneVerificationEnabled: true,
+      ssnEnabled: true,
+      bankAccountEnabled: true,
+    };
+
+    data.forEach((item: { setting_key: string; setting_value: boolean }) => {
+      switch (item.setting_key) {
+        case 'email_enabled':
+          settings.emailEnabled = item.setting_value;
+          break;
+        case 'phone_enabled':
+          settings.phoneEnabled = item.setting_value;
+          break;
+        case 'phone_verification_enabled':
+          settings.phoneVerificationEnabled = item.setting_value;
+          break;
+        case 'ssn_enabled':
+          settings.ssnEnabled = item.setting_value;
+          break;
+        case 'bank_account_enabled':
+          settings.bankAccountEnabled = item.setting_value;
+          break;
+      }
+    });
+
+    return settings;
+  } catch (error) {
+    console.error('Exception fetching form settings:', error);
+    return null;
+  }
+}
+
 /**
  * Fetch all payment plans for all credit tiers
  * @returns Record of credit tier to payment plans array

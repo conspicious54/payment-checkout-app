@@ -541,6 +541,12 @@ export function ApplicationModal({
               onBack={handleAgreementBack}
             />
           </>
+        ) : showBankAccountScreen ? (
+          <BankAccountStep
+            bankData={bankData}
+            onBankDataChange={handleBankDataChange}
+            onNext={handleBankAccountNext}
+          />
         ) : showPhoneVerification && formSettings?.phoneVerificationEnabled ? (
           <PhoneVerificationStep
             phone={formData.phone}

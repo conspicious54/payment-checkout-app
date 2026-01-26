@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Header } from './components/Header';
 import { PaymentFrequencyToggle } from './components/PaymentFrequencyToggle';
@@ -6,10 +6,12 @@ import { PlanSelector } from './components/PlanSelector';
 import { PaymentSummary } from './components/PaymentSummary';
 import { PaymentScheduleModal } from './components/PaymentScheduleModal';
 import { ApplicationModal } from './components/ApplicationModal';
-import type { CreditTier, PaymentFrequency } from './constants';
+import { LoadingSpinner } from './components/LoadingSpinner';
+import type { CreditTier, PaymentFrequency, PaymentPlan } from './constants';
 import { creditTierPlans } from './constants';
 import { adjustPlanForFrequency, calculateTotalAmount } from './utils/paymentCalculations';
 import { generatePaymentDates } from './utils/dateUtils';
+import { fetchAllPaymentPlans } from './utils/supabase';
 
 function App() {
   const [creditTier, setCreditTier] = useState<CreditTier>('700+');
@@ -17,8 +19,24 @@ function App() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
   const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>('monthly');
+  const [plansByTier, setPlansByTier] = useState<Record<CreditTier, PaymentPlan[]>>(creditTierPlans);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
-  const plans = useMemo(() => creditTierPlans[creditTier], [creditTier]);
+  // Fetch plans from database on mount
+  useEffect(() => {
+    const loadPlans = async () => {
+      setIsLoadingPlans(true);
+      const dbPlans = await fetchAllPaymentPlans();
+      if (dbPlans) {
+        setPlansByTier(dbPlans);
+      }
+      // If database fetch fails, we'll use the fallback from constants
+      setIsLoadingPlans(false);
+    };
+    loadPlans();
+  }, []);
+
+  const plans = useMemo(() => plansByTier[creditTier], [plansByTier, creditTier]);
   const basePlan = useMemo(() => plans[selectedPlanIndex], [plans, selectedPlanIndex]);
 
   const selectedPlan = useMemo(
@@ -56,6 +74,19 @@ function App() {
   const handleApplicationClose = useCallback(() => {
     setShowApplicationModal(false);
   }, []);
+
+  if (isLoadingPlans) {
+    return (
+      <ErrorBoundary>
+        <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+          <div className="text-center">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-gray-400">Loading payment plans...</p>
+          </div>
+        </div>
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { PaymentPlan, CreditTier } from '../constants';
 
 // Initialize Supabase client
 // TODO: Replace with your actual Supabase URL and anon key
@@ -9,6 +10,114 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
+
+// Database Payment Plan interface
+interface DatabasePaymentPlan {
+  id: string;
+  credit_tier: CreditTier;
+  months: number;
+  base_amount: number;
+  interest_rate: number;
+  per_payment: number;
+  total_payments: number;
+  total_amount: number;
+  is_active: boolean;
+  display_order: number;
+}
+
+/**
+ * Fetch payment plans from database for a specific credit tier
+ * @param creditTier - The credit tier to fetch plans for
+ * @returns Array of payment plans or null if error
+ */
+export async function fetchPaymentPlans(creditTier: CreditTier): Promise<PaymentPlan[] | null> {
+  if (!supabase) {
+    console.warn('Supabase not configured. Using fallback plans.');
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('credit_tier', creditTier)
+      .eq('is_active', true)
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching payment plans:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn(`No active payment plans found for credit tier: ${creditTier}`);
+      return null;
+    }
+
+    // Transform database format to application format
+    return data.map((plan: DatabasePaymentPlan) => ({
+      months: plan.months,
+      perPayment: plan.per_payment,
+      totalPayments: plan.total_payments,
+    }));
+  } catch (error) {
+    console.error('Exception fetching payment plans:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch all payment plans for all credit tiers
+ * @returns Record of credit tier to payment plans array
+ */
+export async function fetchAllPaymentPlans(): Promise<Record<CreditTier, PaymentPlan[]> | null> {
+  if (!supabase) {
+    console.warn('Supabase not configured. Using fallback plans.');
+    return null;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('payment_plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('credit_tier', { ascending: true })
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching all payment plans:', error);
+      return null;
+    }
+
+    if (!data || data.length === 0) {
+      console.warn('No active payment plans found');
+      return null;
+    }
+
+    // Group by credit tier
+    const plansByTier: Record<CreditTier, PaymentPlan[]> = {
+      '700+': [],
+      '600-700': [],
+      'below-600': [],
+    };
+
+    data.forEach((plan: DatabasePaymentPlan) => {
+      const tier = plan.credit_tier;
+      if (tier in plansByTier) {
+        plansByTier[tier].push({
+          months: plan.months,
+          perPayment: plan.per_payment,
+          totalPayments: plan.total_payments,
+        });
+      }
+    });
+
+    return plansByTier;
+  } catch (error) {
+    console.error('Exception fetching all payment plans:', error);
+    return null;
+  }
+}
 
 // Application submission interface
 export interface ApplicationData {

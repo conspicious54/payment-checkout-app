@@ -243,7 +243,12 @@ export function PaymentStep({
       </div>
 
       <button
-        onClick={onSubmit}
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onSubmit();
+        }}
         onKeyDown={handleKeyDown}
         disabled={!isValid}
         className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition-all mb-4"

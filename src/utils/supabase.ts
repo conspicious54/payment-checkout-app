@@ -284,15 +284,12 @@ export async function submitApplication(data: ApplicationData): Promise<{
       return { success: false, error: error.message };
     }
 
-    console.log('Application saved successfully:', {
-      sessionId: data.sessionId,
-      email: data.email,
-      applicationId: insertedData?.[0]?.id,
-    });
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return { success: false, error: error.message };
+    if (insertedData && insertedData.length > 0) {
+      console.log('✅ Application saved successfully:', {
+        sessionId: data.sessionId,
+        email: data.email,
+        applicationId: insertedData[0].id,
+      });
     }
 
     return { success: true };

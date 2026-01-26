@@ -307,14 +307,23 @@ export function ApplicationModal({
       });
 
       if (result.success) {
+        console.log('✅ Application submitted successfully!');
         stopLoading();
-        onClose();
+        // Small delay before closing to ensure data is saved
+        setTimeout(() => {
+          onClose();
+        }, 500);
         // TODO: Show success message/toast
       } else {
+        stopLoading();
         setError(result.error || 'Failed to submit application');
+        console.error('❌ Application submission failed:', result.error);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      stopLoading();
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      console.error('❌ Application submission error:', err);
     }
   };
 

@@ -77,8 +77,7 @@ export function ApplicationModal({
     let steps = 0;
     if (formSettings.emailEnabled) steps++;
     if (formSettings.phoneEnabled) steps++;
-    // Name is always required
-    steps++;
+    if (formSettings.fullNameEnabled) steps++;
     if (formSettings.ssnEnabled) steps++;
     return steps;
   }, [formSettings]);

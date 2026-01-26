@@ -51,13 +51,7 @@ export function ApplicationModal({
     consentAgreed: boolean;
     agreementVersion: string;
   } | undefined>(undefined);
-  const [formSettings, setFormSettings] = useState<FormSettings>({
-    emailEnabled: true,
-    phoneEnabled: true,
-    phoneVerificationEnabled: true,
-    ssnEnabled: true,
-    bankAccountEnabled: true,
-  });
+  const [formSettings, setFormSettings] = useState<FormSettings | null>(null);
 
   // Fetch form settings on mount
   useEffect(() => {
@@ -79,6 +73,7 @@ export function ApplicationModal({
 
   // Calculate total steps based on enabled fields
   const totalSteps = useMemo(() => {
+    if (!formSettings) return 4; // Default while loading
     let steps = 0;
     if (formSettings.emailEnabled) steps++;
     if (formSettings.phoneEnabled) steps++;
@@ -110,59 +105,72 @@ export function ApplicationModal({
   }, [formSettings]);
 
   const needsBankAccount = useMemo(
-    () => (creditTier === 'below-600' || plan.months >= 6) && formSettings.bankAccountEnabled,
-    [creditTier, plan.months, formSettings.bankAccountEnabled]
+    () => (creditTier === 'below-600' || plan.months >= 6) && formSettings?.bankAccountEnabled !== false,
+    [creditTier, plan.months, formSettings]
   );
 
   const handleNext = useCallback(() => {
-    // Determine which field step we're on
-    let currentFieldStep = 0;
+    if (!formSettings) return; // Wait for settings to load
+    
+    // Calculate which actual field step we're on
+    let actualStep = 0;
+    
+    // Step 1: Email (if enabled)
     if (formSettings.emailEnabled) {
-      currentFieldStep++;
-      if (step === 1) {
+      actualStep++;
+      if (step === actualStep) {
         // After email, go to next enabled field
         if (formSettings.phoneEnabled) {
-          setStep(2);
+          setStep(step + 1);
         } else {
-          // Skip to name
-          setStep(3);
+          // Skip phone, go to name
+          setStep(step + 2);
         }
         return;
       }
     }
+    
+    // Step 2: Phone (if enabled)
     if (formSettings.phoneEnabled) {
-      currentFieldStep++;
-    if (step === 2) {
+      actualStep++;
+      if (step === actualStep) {
         // After phone number, show phone verification if enabled
         if (formSettings.phoneVerificationEnabled) {
-      setShowPhoneVerification(true);
+          setShowPhoneVerification(true);
         } else {
           // Skip verification, go to name
-          setStep(3);
+          setStep(step + 1);
         }
         return;
       }
     }
-    // Name step (always step 3)
-    if (step === 3) {
+    
+    // Step 3: Name (always required)
+    actualStep++;
+    if (step === actualStep) {
       if (formSettings.ssnEnabled) {
-        setStep(4);
+        setStep(step + 1);
       } else {
         // Skip SSN, go to bank account or payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
-    } else {
+        } else {
           setShowPaymentScreen(true);
         }
       }
       return;
     }
-    // SSN step (step 4)
-    if (step === 4) {
-      if (needsBankAccount) {
-        setShowBankAccountScreen(true);
-      } else {
-        setShowPaymentScreen(true);
+    
+    // Step 4: SSN (if enabled)
+    if (formSettings.ssnEnabled) {
+      actualStep++;
+      if (step === actualStep) {
+        if (needsBankAccount) {
+          setShowBankAccountScreen(true);
+        } else {
+          setShowPaymentScreen(true);
+        }
+        return;
       }
     }
   }, [step, formSettings, needsBankAccount]);
@@ -329,22 +337,28 @@ export function ApplicationModal({
             onBankDataChange={handleBankDataChange}
             onNext={handleBankAccountNext}
           />
-        ) : showPhoneVerification && formSettings.phoneVerificationEnabled ? (
+        ) : showPhoneVerification && formSettings?.phoneVerificationEnabled ? (
           <PhoneVerificationStep
             phone={formData.phone}
             onVerify={handlePhoneVerify}
             onResend={handleResendCode}
           />
         ) : (
-          <IdentityVerificationStep
-            step={step}
-            totalSteps={totalSteps}
-            formData={formData}
-            onInputChange={handleInputChange}
-            onNext={handleNext}
-            needsBankAccount={needsBankAccount}
-            formSettings={formSettings}
-          />
+          {formSettings ? (
+            <IdentityVerificationStep
+              step={step}
+              totalSteps={totalSteps}
+              formData={formData}
+              onInputChange={handleInputChange}
+              onNext={handleNext}
+              needsBankAccount={needsBankAccount}
+              formSettings={formSettings}
+            />
+          ) : (
+            <div className="p-8 pt-16 flex items-center justify-center">
+              <LoadingSpinner size="lg" />
+            </div>
+          )}
         )}
       </div>
     </div>

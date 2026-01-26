@@ -345,13 +345,8 @@ export function AgreementStep({
               required
             />
             <p className="text-gray-500 text-xs mt-2">
-              Your signature must match the full name you provided: <strong className="text-white">{fullName}</strong>
+              Enter your full legal name to sign this agreement.
             </p>
-            {signatureName.trim() && signatureName.trim().toLowerCase() !== fullName.toLowerCase() && (
-              <p className="text-red-400 text-xs mt-1">
-                ⚠️ The signature name must exactly match your full name above.
-              </p>
-            )}
           </div>
 
           <div className="flex gap-3">

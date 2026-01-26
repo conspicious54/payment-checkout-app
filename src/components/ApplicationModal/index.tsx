@@ -58,12 +58,6 @@ export function ApplicationModal({
     timeSpentSeconds: number;
     scrollDepth: number;
   } | undefined>(undefined);
-  const [paymentData, setPaymentData] = useState({
-    cardNumber: '',
-    expDate: '',
-    cvv: '',
-    zipCode: '',
-  });
   const [formSettings, setFormSettings] = useState<FormSettings | null>(null);
   
   // Generate session ID when modal opens
@@ -388,10 +382,6 @@ export function ApplicationModal({
     value: string | 'checking' | 'savings'
   ) => {
     setBankData((prev) => ({ ...prev, [field]: value }));
-  }, []);
-
-  const handlePaymentInputChange = useCallback((field: keyof typeof paymentData, value: string) => {
-    setPaymentData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   const handlePaymentInputChange = useCallback((field: keyof typeof paymentData, value: string) => {

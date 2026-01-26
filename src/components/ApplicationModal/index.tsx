@@ -507,9 +507,13 @@ export function ApplicationModal({
               paymentData={paymentData}
               onPaymentInputChange={handlePaymentInputChange}
               onSubmit={() => {
-                // Payment will be handled by embedded checkout
-                // This is just a placeholder - you can embed your checkout here
-                console.log('Payment step - embed your checkout here');
+                // After payment info is entered, go to agreement
+                if (formSettings?.agreementEnabled) {
+                  setShowAgreementScreen(true);
+                } else {
+                  // If agreement is disabled, save and close immediately
+                  handleFinalSubmit();
+                }
               }}
             />
           </>

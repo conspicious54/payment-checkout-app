@@ -247,16 +247,14 @@ export function ApplicationModal({
     }
     
     if (isOnSSN) {
-      // Last field, go to bank/agreement/payment
+      // Last field, go to bank account or payment
       console.log('🚀 Navigating from SSN step. needsBankAccount:', needsBankAccount);
       if (needsBankAccount) {
         console.log('✅ Setting showBankAccountScreen to true');
         setShowBankAccountScreen(true);
-      } else if (formSettings.agreementEnabled) {
-        setShowAgreementScreen(true);
       } else {
-        // No agreement, save and close immediately
-        handleFinalSubmit();
+        // Go directly to payment screen
+        setShowPaymentScreen(true);
       }
       return;
     }
@@ -284,16 +282,14 @@ export function ApplicationModal({
       if (formSettings.fullNameEnabled) ssnStep++;
       setStep(ssnStep);
     } else {
-      // No more fields, go to bank/agreement/payment
+      // No more fields, go to bank account or payment
       console.log('🚀 Navigating from phone verification. needsBankAccount:', needsBankAccount);
       if (needsBankAccount) {
         console.log('✅ Setting showBankAccountScreen to true');
         setShowBankAccountScreen(true);
-      } else if (formSettings?.agreementEnabled) {
-        setShowAgreementScreen(true);
       } else {
-        // No agreement, save and close immediately
-        handleFinalSubmit();
+        // Go directly to payment screen
+        setShowPaymentScreen(true);
       }
     }
   }, [sessionId, formData, creditTier, plan, paymentFrequency, formSettings, needsBankAccount]);

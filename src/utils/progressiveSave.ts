@@ -116,6 +116,7 @@ export async function savePartialApplication(data: PartialApplicationData): Prom
     let result;
     if (existing && !checkError) {
       // Update existing record
+      console.log('🔄 Updating existing application:', { sessionId: data.sessionId, applicationData });
       result = await supabase
         .from('applications')
         .update(applicationData)
@@ -124,6 +125,7 @@ export async function savePartialApplication(data: PartialApplicationData): Prom
     } else {
       // Create new record
       applicationData.created_at = new Date().toISOString();
+      console.log('➕ Creating new application:', { sessionId: data.sessionId, applicationData });
       result = await supabase
         .from('applications')
         .insert(applicationData)
@@ -131,10 +133,11 @@ export async function savePartialApplication(data: PartialApplicationData): Prom
     }
 
     if (result.error) {
-      console.error('Error saving partial application:', result.error);
+      console.error('❌ Error saving partial application:', result.error);
       return { success: false, error: result.error.message };
     }
 
+    console.log('✅ Successfully saved partial application:', { sessionId: data.sessionId, result: result.data });
     return { success: true };
   } catch (error) {
     console.error('Exception saving partial application:', error);

@@ -18,6 +18,28 @@ ALTER TABLE applications
 ALTER TABLE applications 
   ALTER COLUMN ssn_last_4 DROP NOT NULL;
 
+-- Update status check constraint to include new status values
+-- Drop ALL check constraints on the status column (using multiple possible names)
+DO $$ 
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (
+        SELECT conname 
+        FROM pg_constraint 
+        WHERE conrelid = 'applications'::regclass 
+        AND contype = 'c'
+        AND pg_get_constraintdef(oid) LIKE '%status%'
+    ) LOOP
+        EXECUTE 'ALTER TABLE applications DROP CONSTRAINT IF EXISTS ' || quote_ident(r.conname);
+    END LOOP;
+END $$;
+
+-- Now add the new constraint with all status values
+ALTER TABLE applications 
+  ADD CONSTRAINT applications_status_check 
+  CHECK (status IN ('pending', 'in_progress', 'payment_pending', 'approved', 'rejected', 'processing'));
+
 -- Fix RLS policy to allow SELECT for checking existing records
 -- Drop the restrictive SELECT policy
 DROP POLICY IF EXISTS "Applications are viewable by service role only" ON applications;

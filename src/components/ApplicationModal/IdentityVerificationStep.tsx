@@ -44,9 +44,10 @@ export function IdentityVerificationStep({
       fieldStep++;
       if (step === fieldStep) return 'phone';
     }
-    // Name is always the next step after email/phone
-    fieldStep++;
-    if (step === fieldStep) return 'fullName';
+    if (formSettings.fullNameEnabled) {
+      fieldStep++;
+      if (step === fieldStep) return 'fullName';
+    }
     if (formSettings.ssnEnabled) {
       fieldStep++;
       if (step === fieldStep) return 'ssn';

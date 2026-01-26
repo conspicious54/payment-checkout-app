@@ -71,6 +71,7 @@ export interface FormSettings {
   emailEnabled: boolean;
   phoneEnabled: boolean;
   phoneVerificationEnabled: boolean;
+  fullNameEnabled: boolean;
   ssnEnabled: boolean;
   bankAccountEnabled: boolean;
 }
@@ -107,6 +108,7 @@ export async function fetchFormSettings(): Promise<FormSettings | null> {
       emailEnabled: true,
       phoneEnabled: true,
       phoneVerificationEnabled: true,
+      fullNameEnabled: true,
       ssnEnabled: true,
       bankAccountEnabled: true,
     };
@@ -121,6 +123,9 @@ export async function fetchFormSettings(): Promise<FormSettings | null> {
           break;
         case 'phone_verification_enabled':
           settings.phoneVerificationEnabled = item.setting_value;
+          break;
+        case 'full_name_enabled':
+          settings.fullNameEnabled = item.setting_value;
           break;
         case 'ssn_enabled':
           settings.ssnEnabled = item.setting_value;

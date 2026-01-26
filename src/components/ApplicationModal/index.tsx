@@ -122,9 +122,17 @@ export function ApplicationModal({
         // After email, go to next enabled field
         if (formSettings.phoneEnabled) {
           setStep(step + 1);
-        } else {
-          // Skip phone, go to name
+        } else if (formSettings.fullNameEnabled) {
           setStep(step + 2);
+        } else if (formSettings.ssnEnabled) {
+          setStep(step + 3);
+        } else {
+          // Go to bank account or payment
+          if (needsBankAccount) {
+            setShowBankAccountScreen(true);
+          } else {
+            setShowPaymentScreen(true);
+          }
         }
         return;
       }
@@ -138,27 +146,39 @@ export function ApplicationModal({
         if (formSettings.phoneVerificationEnabled) {
           setShowPhoneVerification(true);
         } else {
-          // Skip verification, go to name
-          setStep(step + 1);
+          // Skip verification, go to next enabled field
+          if (formSettings.fullNameEnabled) {
+            setStep(step + 1);
+          } else if (formSettings.ssnEnabled) {
+            setStep(step + 2);
+          } else {
+            if (needsBankAccount) {
+              setShowBankAccountScreen(true);
+            } else {
+              setShowPaymentScreen(true);
+            }
+          }
         }
         return;
       }
     }
     
-    // Step 3: Name (always required)
-    actualStep++;
-    if (step === actualStep) {
-      if (formSettings.ssnEnabled) {
-        setStep(step + 1);
-      } else {
-        // Skip SSN, go to bank account or payment
-        if (needsBankAccount) {
-          setShowBankAccountScreen(true);
+    // Step 3: Name (if enabled)
+    if (formSettings.fullNameEnabled) {
+      actualStep++;
+      if (step === actualStep) {
+        if (formSettings.ssnEnabled) {
+          setStep(step + 1);
         } else {
-          setShowPaymentScreen(true);
+          // Skip SSN, go to bank account or payment
+          if (needsBankAccount) {
+            setShowBankAccountScreen(true);
+          } else {
+            setShowPaymentScreen(true);
+          }
         }
+        return;
       }
-      return;
     }
     
     // Step 4: SSN (if enabled)
@@ -343,22 +363,20 @@ export function ApplicationModal({
             onVerify={handlePhoneVerify}
             onResend={handleResendCode}
           />
+        ) : formSettings ? (
+          <IdentityVerificationStep
+            step={step}
+            totalSteps={totalSteps}
+            formData={formData}
+            onInputChange={handleInputChange}
+            onNext={handleNext}
+            needsBankAccount={needsBankAccount}
+            formSettings={formSettings}
+          />
         ) : (
-          {formSettings ? (
-            <IdentityVerificationStep
-              step={step}
-              totalSteps={totalSteps}
-              formData={formData}
-              onInputChange={handleInputChange}
-              onNext={handleNext}
-              needsBankAccount={needsBankAccount}
-              formSettings={formSettings}
-            />
-          ) : (
-            <div className="p-8 pt-16 flex items-center justify-center">
-              <LoadingSpinner size="lg" />
-            </div>
-          )}
+          <div className="p-8 pt-16 flex items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
         )}
       </div>
     </div>

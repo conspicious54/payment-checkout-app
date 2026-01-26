@@ -265,19 +265,6 @@ export function ApplicationModal({
     setPhoneVerified(true);
     setShowPhoneVerification(false);
     
-    // Save phone verification progress
-    savePartialApplication({
-      sessionId,
-      email: formData.email,
-      phone: formData.phone,
-      creditTier,
-      planMonths: plan.months,
-      planPerPayment: plan.perPayment,
-      planTotalPayments: plan.totalPayments,
-      paymentFrequency,
-      status: 'in_progress',
-    });
-    
     // Find next enabled field
     if (formSettings?.fullNameEnabled) {
       // Calculate the step number for fullName

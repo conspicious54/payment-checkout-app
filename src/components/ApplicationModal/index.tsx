@@ -251,7 +251,8 @@ export function ApplicationModal({
       } else if (formSettings.agreementEnabled) {
         setShowAgreementScreen(true);
       } else {
-        setShowPaymentScreen(true);
+        // No agreement, save and close immediately
+        handleFinalSubmit();
       }
       return;
     }

@@ -100,6 +100,8 @@ export async function fetchFormSettings(): Promise<FormSettings | null> {
       return null;
     }
 
+    console.log('Raw form settings from database:', data);
+
     // Convert array to object with default values
     const settings: FormSettings = {
       emailEnabled: true,
@@ -129,6 +131,7 @@ export async function fetchFormSettings(): Promise<FormSettings | null> {
       }
     });
 
+    console.log('Processed form settings:', settings);
     return settings;
   } catch (error) {
     console.error('Exception fetching form settings:', error);

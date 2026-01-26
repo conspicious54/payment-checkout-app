@@ -64,7 +64,10 @@ export function ApplicationModal({
     const loadSettings = async () => {
       const settings = await fetchFormSettings();
       if (settings) {
+        console.log('Form settings loaded from database:', settings);
         setFormSettings(settings);
+      } else {
+        console.warn('Form settings not loaded, using defaults. Check Supabase connection.');
       }
     };
     loadSettings();

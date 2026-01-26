@@ -66,6 +66,15 @@ export function ApplicationModal({
         setPhoneVerified(false);
       } else {
         console.warn('Form settings not loaded, using defaults. Check Supabase connection.');
+        // Use default settings so form still works
+        setFormSettings({
+          emailEnabled: true,
+          phoneEnabled: true,
+          phoneVerificationEnabled: true,
+          fullNameEnabled: true,
+          ssnEnabled: true,
+          bankAccountEnabled: true,
+        });
       }
     };
     loadSettings();

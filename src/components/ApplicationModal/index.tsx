@@ -461,31 +461,7 @@ export function ApplicationModal({
           />
         </div>
 
-        {showAgreementScreen && formSettings?.agreementEnabled ? (
-          <>
-            {isLoading && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
-                <div className="bg-[#141414] rounded-xl p-8 flex flex-col items-center gap-4">
-                  <LoadingSpinner size="lg" />
-                  <p className="text-gray-400">Submitting your application...</p>
-                </div>
-              </div>
-            )}
-            {error && (
-              <div className="p-4 mb-4 bg-red-900/20 border border-red-500/50 rounded-lg">
-                <p className="text-red-400 text-sm" role="alert">
-                  {error}
-                </p>
-              </div>
-            )}
-            <AgreementStep
-              fullName={formData.fullName}
-              email={formData.email}
-              onSign={handleAgreementSign}
-              onBack={handleAgreementBack}
-            />
-          </>
-        ) : showBankAccountScreen ? (
+        {showBankAccountScreen ? (
           <BankAccountStep
             bankData={bankData}
             onBankDataChange={handleBankDataChange}

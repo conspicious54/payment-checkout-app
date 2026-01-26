@@ -230,6 +230,11 @@ export interface ApplicationData {
     signedAt: string;
     consentAgreed: boolean;
     agreementVersion: string;
+    ipAddress: string | null;
+    userAgent: string;
+    agreementTextHash: string;
+    timeSpentSeconds: number;
+    scrollDepth: number;
   };
 }
 
@@ -273,14 +278,17 @@ export async function submitApplication(data: ApplicationData): Promise<{
       card_last_4: data.paymentCard?.cardNumber.slice(-4),
       card_exp_date: data.paymentCard?.expDate,
       card_zip: data.paymentCard?.zipCode,
-      // E-Signature data (required for compliance)
+      // E-Signature data (required for legal compliance)
       signature_name: data.signature?.signatureName,
       signature_signed_at: data.signature?.signedAt,
       signature_consent_agreed: data.signature?.consentAgreed,
       signature_agreement_version: data.signature?.agreementVersion,
-      // Additional metadata for e-signature compliance
-      ip_address: null, // Should be captured server-side
-      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      // Enhanced e-signature metadata for legal validity
+      ip_address: data.signature?.ipAddress || null,
+      user_agent: data.signature?.userAgent || (typeof navigator !== 'undefined' ? navigator.userAgent : null),
+      signature_agreement_hash: data.signature?.agreementTextHash || null,
+      signature_time_spent: data.signature?.timeSpentSeconds || null,
+      signature_scroll_depth: data.signature?.scrollDepth || null,
       created_at: new Date().toISOString(),
     }).select();
 

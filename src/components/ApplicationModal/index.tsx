@@ -51,6 +51,11 @@ export function ApplicationModal({
     signedAt: string;
     consentAgreed: boolean;
     agreementVersion: string;
+    ipAddress: string | null;
+    userAgent: string;
+    agreementTextHash: string;
+    timeSpentSeconds: number;
+    scrollDepth: number;
   } | undefined>(undefined);
   const [formSettings, setFormSettings] = useState<FormSettings | null>(null);
   
@@ -494,6 +499,7 @@ export function ApplicationModal({
             )}
             <AgreementStep
               fullName={formData.fullName}
+              email={formData.email}
               onSign={handleAgreementSign}
               onBack={handleAgreementBack}
             />

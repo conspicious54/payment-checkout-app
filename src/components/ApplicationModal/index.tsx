@@ -52,6 +52,12 @@ export function ApplicationModal({
     agreementVersion: string;
   } | undefined>(undefined);
   const [formSettings, setFormSettings] = useState<FormSettings | null>(null);
+  
+  // Generate session ID when modal opens
+  const [sessionId] = useState(() => {
+    // Generate a unique session ID
+    return `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  });
 
   // Fetch form settings on mount
   useEffect(() => {
@@ -274,6 +280,7 @@ export function ApplicationModal({
     try {
 
       const result = await submitApplication({
+        sessionId,
         email: formData.email,
         phone: formData.phone,
         fullName: formData.fullName,

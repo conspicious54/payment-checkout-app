@@ -199,6 +199,7 @@ export async function fetchAllPaymentPlans(): Promise<Record<CreditTier, Payment
 
 // Application submission interface
 export interface ApplicationData {
+  sessionId: string;
   email: string;
   phone: string;
   fullName: string;
@@ -248,7 +249,8 @@ export async function submitApplication(data: ApplicationData): Promise<{
     // 3. Store payment info securely (use a payment processor like Stripe)
     // 4. Never store CVV
     
-    const { error } = await supabase.from('applications').insert({
+    const { data: insertedData, error } = await supabase.from('applications').insert({
+      session_id: data.sessionId,
       email: data.email,
       phone: data.phone,
       full_name: data.fullName,
@@ -275,6 +277,17 @@ export async function submitApplication(data: ApplicationData): Promise<{
       ip_address: null, // Should be captured server-side
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
       created_at: new Date().toISOString(),
+    }).select();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('Application saved successfully:', {
+      sessionId: data.sessionId,
+      email: data.email,
+      applicationId: insertedData?.[0]?.id,
     });
 
     if (error) {

@@ -307,14 +307,9 @@ export function ApplicationModal({
   }, [formData.phone]);
 
   const handleBankAccountNext = useCallback(() => {
-    // Go to agreement (payment will be handled by third-party after agreement)
-    if (formSettings?.agreementEnabled) {
-      setShowAgreementScreen(true);
-    } else {
-      // If agreement is disabled, save and close immediately
-      handleFinalSubmit();
-    }
-  }, [formSettings]);
+    // Go to payment screen after bank account
+    setShowPaymentScreen(true);
+  }, []);
   
   const handleAgreementSign = useCallback(async (sigData: typeof signatureData) => {
     setSignatureData(sigData);
@@ -556,12 +551,6 @@ export function ApplicationModal({
               onBack={handleAgreementBack}
             />
           </>
-        ) : showBankAccountScreen ? (
-          <BankAccountStep
-            bankData={bankData}
-            onBankDataChange={handleBankDataChange}
-            onNext={handleBankAccountNext}
-          />
         ) : showPhoneVerification && formSettings?.phoneVerificationEnabled ? (
           <PhoneVerificationStep
             phone={formData.phone}

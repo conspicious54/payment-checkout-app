@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react';
-import { FileText, Check } from 'lucide-react';
 import type { PaymentPlan } from '../../constants';
 import { validatePaymentCard } from '../../utils/validation';
-import { ESignatureAgreement } from './ESignatureAgreement';
 
 interface PaymentStepProps {
   plan: PaymentPlan;
@@ -14,19 +12,6 @@ interface PaymentStepProps {
   };
   onPaymentInputChange: (field: keyof PaymentStepProps['paymentData'], value: string) => void;
   onSubmit: () => void;
-  fullName: string;
-  signatureData?: {
-    signatureName: string;
-    signedAt: string;
-    consentAgreed: boolean;
-    agreementVersion: string;
-  };
-  onSignatureComplete: (signatureData: {
-    signatureName: string;
-    signedAt: string;
-    consentAgreed: boolean;
-    agreementVersion: string;
-  }) => void;
 }
 
 export function PaymentStep({
@@ -34,11 +19,7 @@ export function PaymentStep({
   paymentData,
   onPaymentInputChange,
   onSubmit,
-  fullName,
-  signatureData,
-  onSignatureComplete,
 }: PaymentStepProps) {
-  const [showAgreement, setShowAgreement] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const validation = useMemo(
@@ -51,7 +32,7 @@ export function PaymentStep({
     [paymentData.cardNumber, paymentData.expDate, paymentData.cvv, paymentData.zipCode]
   );
 
-  const isValid = validation.isValid && !!signatureData;
+  const isValid = validation.isValid;
 
   const handleInputChange = (field: keyof typeof paymentData, value: string) => {
     onPaymentInputChange(field, value);
@@ -209,39 +190,6 @@ export function PaymentStep({
         </div>
       </div>
 
-      <div className="bg-[#0a0a0a] rounded-xl p-4 mb-6">
-        <button
-          type="button"
-          onClick={() => setShowAgreement(true)}
-          className="w-full flex items-center justify-between gap-4 p-4 hover:bg-[#141414] rounded-lg transition-colors text-left"
-        >
-          <div className="flex items-center gap-3">
-            {signatureData ? (
-              <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                <Check className="w-5 h-5 text-white" />
-              </div>
-            ) : (
-              <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center">
-                <FileText className="w-5 h-5 text-gray-400" />
-              </div>
-            )}
-            <div>
-              <div className="text-sm font-medium text-white">
-                {signatureData ? 'Agreement Signed' : 'Sign the Agreement'}
-              </div>
-              <div className="text-xs text-gray-500">
-                {signatureData 
-                  ? `Signed by ${signatureData.signatureName}` 
-                  : 'Review and sign the terms and e-signing consent'}
-              </div>
-            </div>
-          </div>
-          {!signatureData && (
-            <div className="text-gray-400 text-sm">Required</div>
-          )}
-        </button>
-      </div>
-
       <button
         type="button"
         onClick={(e) => {
@@ -252,25 +200,14 @@ export function PaymentStep({
         onKeyDown={handleKeyDown}
         disabled={!isValid}
         className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition-all mb-4"
-        aria-label="Submit application and join program"
+        aria-label="Continue to payment processing"
       >
-        Join the Program
+        Continue to Payment
       </button>
 
       <p className="text-gray-500 text-xs text-center leading-relaxed">
         Your payment information is encrypted and secure. You will be charged ${plan.perPayment.toFixed(2)} today.
       </p>
-
-      {showAgreement && (
-        <ESignatureAgreement
-          fullName={fullName}
-          onSign={(data) => {
-            onSignatureComplete(data);
-            setShowAgreement(false);
-          }}
-          onClose={() => setShowAgreement(false)}
-        />
-      )}
     </form>
   );
 }

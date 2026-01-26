@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS applications (
   signature_agreement_version TEXT,
   ip_address INET,
   user_agent TEXT,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'processing')),
+  session_id TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'payment_pending', 'approved', 'rejected', 'processing')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS applications (
 CREATE INDEX IF NOT EXISTS idx_payment_plans_credit_tier ON payment_plans(credit_tier);
 CREATE INDEX IF NOT EXISTS idx_payment_plans_active ON payment_plans(is_active);
 CREATE INDEX IF NOT EXISTS idx_applications_email ON applications(email);
+CREATE INDEX IF NOT EXISTS idx_applications_session_id ON applications(session_id);
 CREATE INDEX IF NOT EXISTS idx_applications_credit_tier ON applications(credit_tier);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
 CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at);
@@ -88,6 +90,10 @@ CREATE POLICY "Payment plans are viewable by everyone"
 CREATE POLICY "Applications can be inserted by anyone"
   ON applications FOR INSERT
   WITH CHECK (true);
+
+CREATE POLICY "Applications can be updated by anyone"
+  ON applications FOR UPDATE
+  USING (true);
 
 CREATE POLICY "Applications are viewable by service role only"
   ON applications FOR SELECT
@@ -157,6 +163,8 @@ INSERT INTO form_settings (setting_key, setting_value, description) VALUES
   ('email_enabled', true, 'Enable/disable email field in application form'),
   ('phone_enabled', true, 'Enable/disable phone number field in application form'),
   ('phone_verification_enabled', true, 'Enable/disable phone verification step'),
+  ('full_name_enabled', true, 'Enable/disable full name field in application form'),
   ('ssn_enabled', true, 'Enable/disable SSN (last 4 digits) field in application form'),
-  ('bank_account_enabled', true, 'Enable/disable bank account verification step')
+  ('bank_account_enabled', true, 'Enable/disable bank account verification step'),
+  ('agreement_enabled', true, 'Enable/disable agreement/e-signature step')
 ON CONFLICT (setting_key) DO NOTHING;

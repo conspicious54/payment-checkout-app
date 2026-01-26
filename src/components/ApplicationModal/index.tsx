@@ -5,7 +5,9 @@ import { IdentityVerificationStep } from './IdentityVerificationStep';
 import { PhoneVerificationStep } from './PhoneVerificationStep';
 import { BankAccountStep } from './BankAccountStep';
 import { PaymentStep } from './PaymentStep';
+import { AgreementStep } from './AgreementStep';
 import { submitApplication, fetchFormSettings, type FormSettings } from '../../utils/supabase';
+import { savePartialApplication } from '../../utils/progressiveSave';
 import { useLoadingState } from '../../utils/loadingStates';
 import { LoadingSpinner } from '../LoadingSpinner';
 
@@ -26,6 +28,7 @@ export function ApplicationModal({
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [showBankAccountScreen, setShowBankAccountScreen] = useState(false);
+  const [showAgreementScreen, setShowAgreementScreen] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
   const { isLoading, error, startLoading, stopLoading, setError } = useLoadingState();
   const [formData, setFormData] = useState({
@@ -80,6 +83,7 @@ export function ApplicationModal({
           fullNameEnabled: true,
           ssnEnabled: true,
           bankAccountEnabled: true,
+          agreementEnabled: true,
         });
       }
     };
@@ -119,7 +123,7 @@ export function ApplicationModal({
   }, [formSettings]);
 
   const needsBankAccount = useMemo(
-    () => (creditTier === 'below-600' || plan.months >= 6) && formSettings?.bankAccountEnabled !== false,
+    () => (creditTier === 'below-600' || plan.months >= 6) && formSettings?.bankAccountEnabled === true,
     [creditTier, plan.months, formSettings]
   );
 
@@ -163,6 +167,18 @@ export function ApplicationModal({
     
     // Handle navigation based on current field
     if (isOnEmail) {
+      // Save email progress
+      savePartialApplication({
+        sessionId,
+        email: formData.email,
+        creditTier,
+        planMonths: plan.months,
+        planPerPayment: plan.perPayment,
+        planTotalPayments: plan.totalPayments,
+        paymentFrequency,
+        status: 'in_progress',
+      });
+      
       // After email, check if phone verification is needed
       if (formSettings.phoneEnabled && formSettings.phoneVerificationEnabled) {
         setShowPhoneVerification(true);
@@ -176,9 +192,11 @@ export function ApplicationModal({
       } else if (formSettings.ssnEnabled) {
         setStep(step + 1);
       } else {
-        // No more fields, go to bank/payment
+        // No more fields, go to bank/agreement/payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
+        } else if (formSettings.agreementEnabled) {
+          setShowAgreementScreen(true);
         } else {
           setShowPaymentScreen(true);
         }
@@ -187,6 +205,19 @@ export function ApplicationModal({
     }
     
     if (isOnPhone) {
+      // Save phone progress
+      savePartialApplication({
+        sessionId,
+        email: formData.email,
+        phone: formData.phone,
+        creditTier,
+        planMonths: plan.months,
+        planPerPayment: plan.perPayment,
+        planTotalPayments: plan.totalPayments,
+        paymentFrequency,
+        status: 'in_progress',
+      });
+      
       // After phone, check if verification is needed
       if (formSettings.phoneVerificationEnabled) {
         setShowPhoneVerification(true);
@@ -198,9 +229,11 @@ export function ApplicationModal({
       } else if (formSettings.ssnEnabled) {
         setStep(step + 1);
       } else {
-        // No more fields, go to bank/payment
+        // No more fields, go to bank/agreement/payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
+        } else if (formSettings.agreementEnabled) {
+          setShowAgreementScreen(true);
         } else {
           setShowPaymentScreen(true);
         }
@@ -209,13 +242,29 @@ export function ApplicationModal({
     }
     
     if (isOnFullName) {
+      // Save name progress
+      savePartialApplication({
+        sessionId,
+        email: formData.email,
+        phone: formData.phone,
+        fullName: formData.fullName,
+        creditTier,
+        planMonths: plan.months,
+        planPerPayment: plan.perPayment,
+        planTotalPayments: plan.totalPayments,
+        paymentFrequency,
+        status: 'in_progress',
+      });
+      
       // After name, find next enabled field
       if (formSettings.ssnEnabled) {
         setStep(step + 1);
       } else {
-        // No more fields, go to bank/payment
+        // No more fields, go to bank/agreement/payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
+        } else if (formSettings.agreementEnabled) {
+          setShowAgreementScreen(true);
         } else {
           setShowPaymentScreen(true);
         }
@@ -224,15 +273,32 @@ export function ApplicationModal({
     }
     
     if (isOnSSN) {
-      // Last field, go to bank/payment
+      // Save SSN progress
+      savePartialApplication({
+        sessionId,
+        email: formData.email,
+        phone: formData.phone,
+        fullName: formData.fullName,
+        ssn: formData.ssn,
+        creditTier,
+        planMonths: plan.months,
+        planPerPayment: plan.perPayment,
+        planTotalPayments: plan.totalPayments,
+        paymentFrequency,
+        status: 'in_progress',
+      });
+      
+      // Last field, go to bank/agreement/payment
       if (needsBankAccount) {
         setShowBankAccountScreen(true);
+      } else if (formSettings.agreementEnabled) {
+        setShowAgreementScreen(true);
       } else {
         setShowPaymentScreen(true);
       }
       return;
     }
-  }, [step, formSettings, needsBankAccount]);
+  }, [step, formSettings, needsBankAccount, sessionId, formData, creditTier, plan, paymentFrequency]);
 
   const handlePhoneVerify = useCallback((code: string) => {
     // TODO: Verify code with backend API
@@ -240,9 +306,45 @@ export function ApplicationModal({
     // For now, just mark as verified
     setPhoneVerified(true);
     setShowPhoneVerification(false);
-    // Move to name step (step 3)
-    setStep(3);
-  }, []);
+    
+    // Save phone verification progress
+    savePartialApplication({
+      sessionId,
+      email: formData.email,
+      phone: formData.phone,
+      creditTier,
+      planMonths: plan.months,
+      planPerPayment: plan.perPayment,
+      planTotalPayments: plan.totalPayments,
+      paymentFrequency,
+      status: 'in_progress',
+    });
+    
+    // Find next enabled field
+    if (formSettings?.fullNameEnabled) {
+      // Calculate the step number for fullName
+      let nameStep = 1;
+      if (formSettings.emailEnabled) nameStep++;
+      if (formSettings.phoneEnabled) nameStep++;
+      setStep(nameStep);
+    } else if (formSettings?.ssnEnabled) {
+      // Calculate the step number for SSN
+      let ssnStep = 1;
+      if (formSettings.emailEnabled) ssnStep++;
+      if (formSettings.phoneEnabled) ssnStep++;
+      if (formSettings.fullNameEnabled) ssnStep++;
+      setStep(ssnStep);
+    } else {
+      // No more fields, go to bank/agreement/payment
+      if (needsBankAccount) {
+        setShowBankAccountScreen(true);
+      } else if (formSettings?.agreementEnabled) {
+        setShowAgreementScreen(true);
+      } else {
+        setShowPaymentScreen(true);
+      }
+    }
+  }, [sessionId, formData, creditTier, plan, paymentFrequency, formSettings, needsBankAccount]);
 
   const handleResendCode = useCallback(() => {
     // TODO: Resend verification code via backend API
@@ -251,8 +353,73 @@ export function ApplicationModal({
   }, [formData.phone]);
 
   const handleBankAccountNext = useCallback(() => {
+    // Save bank account progress
+    savePartialApplication({
+      sessionId,
+      email: formData.email,
+      phone: formData.phone,
+      fullName: formData.fullName,
+      ssn: formData.ssn,
+      creditTier,
+      planMonths: plan.months,
+      planPerPayment: plan.perPayment,
+      planTotalPayments: plan.totalPayments,
+      paymentFrequency,
+      bankAccount: {
+        accountType: bankData.accountType,
+        routingNumber: bankData.routingNumber,
+        accountNumber: bankData.accountNumber,
+      },
+      status: 'in_progress',
+    });
+    
+    // Go to agreement or payment
+    if (formSettings?.agreementEnabled) {
+      setShowAgreementScreen(true);
+    } else {
+      setShowPaymentScreen(true);
+    }
+  }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, formSettings]);
+  
+  const handleAgreementSign = useCallback((sigData: typeof signatureData) => {
+    setSignatureData(sigData);
+    // Save agreement progress
+    savePartialApplication({
+      sessionId,
+      email: formData.email,
+      phone: formData.phone,
+      fullName: formData.fullName,
+      ssn: formData.ssn,
+      creditTier,
+      planMonths: plan.months,
+      planPerPayment: plan.perPayment,
+      planTotalPayments: plan.totalPayments,
+      paymentFrequency,
+      bankAccount: showBankAccountScreen ? {
+        accountType: bankData.accountType,
+        routingNumber: bankData.routingNumber,
+        accountNumber: bankData.accountNumber,
+      } : undefined,
+      signature: sigData,
+      status: 'in_progress',
+    });
+    // Go to payment screen
     setShowPaymentScreen(true);
-  }, []);
+  }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, showBankAccountScreen]);
+  
+  const handleAgreementBack = useCallback(() => {
+    // Go back to previous screen
+    if (needsBankAccount) {
+      setShowBankAccountScreen(true);
+    } else {
+      // Go back to last form step
+      const lastStep = formSettings?.ssnEnabled ? 4 : 
+                      formSettings?.fullNameEnabled ? 3 :
+                      formSettings?.phoneEnabled ? 2 : 1;
+      setStep(lastStep);
+    }
+    setShowAgreementScreen(false);
+  }, [needsBankAccount, formSettings]);
 
   const handleInputChange = useCallback((field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -270,16 +437,12 @@ export function ApplicationModal({
   }, []);
 
   const handleFinalSubmit = async () => {
-    if (!signatureData) {
-      setError('Please sign the agreement before submitting');
-      return;
-    }
-
+    // Save payment data (final save before redirecting to payment processor)
     startLoading();
     
     try {
-
-      const result = await submitApplication({
+      // Save all data with payment info
+      const result = await savePartialApplication({
         sessionId,
         email: formData.email,
         phone: formData.phone,
@@ -304,35 +467,37 @@ export function ApplicationModal({
           zipCode: paymentData.zipCode,
         },
         signature: signatureData,
+        status: 'payment_pending', // Status before payment processing
       });
 
       if (result.success) {
-        console.log('✅ Application submitted successfully!');
+        console.log('✅ Application data saved! Redirecting to payment processor...');
         stopLoading();
-        // Small delay before closing to ensure data is saved
-        setTimeout(() => {
-          onClose();
-        }, 500);
-        // TODO: Show success message/toast
+        // Close modal - payment will be handled by third-party provider
+        // The third-party provider will send a webhook/callback when payment is complete
+        onClose();
+        // TODO: Redirect to payment processor URL here
+        // window.location.href = paymentProcessorUrl;
       } else {
         stopLoading();
-        setError(result.error || 'Failed to submit application');
-        console.error('❌ Application submission failed:', result.error);
+        setError(result.error || 'Failed to save application data');
+        console.error('❌ Failed to save application:', result.error);
       }
     } catch (err) {
       stopLoading();
       const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
       setError(errorMessage);
-      console.error('❌ Application submission error:', err);
+      console.error('❌ Error saving application:', err);
     }
   };
 
   const progressPercentage = useMemo(() => {
     if (showPaymentScreen) return 100;
+    if (showAgreementScreen) return 90;
     if (showBankAccountScreen) return 80;
     if (showPhoneVerification) return 35; // Between step 2 and 3
     return (step / totalSteps) * 70;
-  }, [showPaymentScreen, showBankAccountScreen, showPhoneVerification, step, totalSteps]);
+  }, [showPaymentScreen, showAgreementScreen, showBankAccountScreen, showPhoneVerification, step, totalSteps]);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -395,12 +560,15 @@ export function ApplicationModal({
               paymentData={paymentData}
               onPaymentInputChange={handlePaymentInputChange}
               onSubmit={handleFinalSubmit}
-              fullName={formData.fullName}
-              signatureData={signatureData}
-              onSignatureComplete={setSignatureData}
             />
           </>
-        ) : showBankAccountScreen ? (
+        ) : showAgreementScreen && formSettings?.agreementEnabled ? (
+          <AgreementStep
+            fullName={formData.fullName}
+            onSign={handleAgreementSign}
+            onBack={handleAgreementBack}
+          />
+        ) : showBankAccountScreen && needsBankAccount ? (
           <BankAccountStep
             bankData={bankData}
             onBankDataChange={handleBankDataChange}

@@ -74,6 +74,7 @@ export interface FormSettings {
   fullNameEnabled: boolean;
   ssnEnabled: boolean;
   bankAccountEnabled: boolean;
+  agreementEnabled: boolean;
 }
 
 /**
@@ -111,6 +112,7 @@ export async function fetchFormSettings(): Promise<FormSettings | null> {
       fullNameEnabled: true,
       ssnEnabled: true,
       bankAccountEnabled: true,
+      agreementEnabled: true,
     };
 
     data.forEach((item: { setting_key: string; setting_value: boolean }) => {
@@ -132,6 +134,9 @@ export async function fetchFormSettings(): Promise<FormSettings | null> {
           break;
         case 'bank_account_enabled':
           settings.bankAccountEnabled = item.setting_value;
+          break;
+        case 'agreement_enabled':
+          settings.agreementEnabled = item.setting_value;
           break;
       }
     });

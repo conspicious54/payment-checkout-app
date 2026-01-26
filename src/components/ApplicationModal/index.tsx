@@ -54,7 +54,7 @@ export function ApplicationModal({
 
   const totalSteps = 4;
   const needsBankAccount = useMemo(
-    () => creditTier === 'below-600' || plan.months >= 12,
+    () => creditTier === 'below-600' || plan.months >= 6,
     [creditTier, plan.months]
   );
 

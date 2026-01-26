@@ -12,20 +12,19 @@ export interface PaymentPlan {
 
 export const creditTierPlans: Record<CreditTier, PaymentPlan[]> = {
   '700+': [
-    { months: 12, perPayment: 669.99, totalPayments: 12 },
-    { months: 6, perPayment: 1223.99, totalPayments: 6 },
-    { months: 3, perPayment: 2331.99, totalPayments: 3 },
+    { months: 6, perPayment: 1099.45, totalPayments: 6 },
+    { months: 3, perPayment: 2098.95, totalPayments: 3 },
+    { months: 2, perPayment: 3103.45, totalPayments: 2 },
   ],
   '600-700': [
-    { months: 16, perPayment: 545.99, totalPayments: 16 },
-    { months: 12, perPayment: 711.99, totalPayments: 12 },
-    { months: 8, perPayment: 961.99, totalPayments: 8 },
-    { months: 3, perPayment: 2447.99, totalPayments: 3 },
+    { months: 6, perPayment: 1099.45, totalPayments: 6 },
+    { months: 3, perPayment: 2098.95, totalPayments: 3 },
+    { months: 2, perPayment: 3103.45, totalPayments: 2 },
   ],
   'below-600': [
-    { months: 12, perPayment: 757.99, totalPayments: 12 },
-    { months: 8, perPayment: 997.99, totalPayments: 8 },
-    { months: 4, perPayment: 1923.99, totalPayments: 4 },
+    { months: 6, perPayment: 1119.44, totalPayments: 6 },
+    { months: 3, perPayment: 2138.93, totalPayments: 3 },
+    { months: 2, perPayment: 3163.42, totalPayments: 2 },
   ],
 };
 

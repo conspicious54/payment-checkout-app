@@ -108,7 +108,7 @@ export function IdentityVerificationStep({
 
       <div className="text-center mb-8">
         <div className="text-sm text-gray-400 mb-2">
-          VERIFY IDENTITY | Step {step} of {totalSteps}
+          VERIFY IDENTITY | Step {step} of {totalSteps > 0 ? totalSteps : step}
         </div>
         <h2 className="text-3xl font-bold mb-4">Grow Now, Pay Later</h2>
         <p className="text-gray-400">

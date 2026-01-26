@@ -120,86 +120,111 @@ export function ApplicationModal({
   const handleNext = useCallback(() => {
     if (!formSettings) return; // Wait for settings to load
     
-    // Calculate which actual field step we're on
-    let actualStep = 0;
+    // Calculate which field we're currently on
+    let currentFieldStep = 0;
+    let isOnEmail = false;
+    let isOnPhone = false;
+    let isOnFullName = false;
+    let isOnSSN = false;
     
-    // Step 1: Email (if enabled)
     if (formSettings.emailEnabled) {
-      actualStep++;
-      if (step === actualStep) {
-        // After email, go to next enabled field
-        if (formSettings.phoneEnabled) {
-          setStep(step + 1);
-        } else if (formSettings.fullNameEnabled) {
-          setStep(step + 2);
-        } else if (formSettings.ssnEnabled) {
-          setStep(step + 3);
-        } else {
-          // Go to bank account or payment
-          if (needsBankAccount) {
-            setShowBankAccountScreen(true);
-          } else {
-            setShowPaymentScreen(true);
-          }
-        }
-        return;
+      currentFieldStep++;
+      if (step === currentFieldStep) {
+        isOnEmail = true;
       }
     }
     
-    // Step 2: Phone (if enabled)
     if (formSettings.phoneEnabled) {
-      actualStep++;
-      if (step === actualStep) {
-        // After phone number, show phone verification if enabled
-        if (formSettings.phoneVerificationEnabled) {
-          setShowPhoneVerification(true);
-        } else {
-          // Skip verification, go to next enabled field
-          if (formSettings.fullNameEnabled) {
-            setStep(step + 1);
-          } else if (formSettings.ssnEnabled) {
-            setStep(step + 2);
-          } else {
-            if (needsBankAccount) {
-              setShowBankAccountScreen(true);
-            } else {
-              setShowPaymentScreen(true);
-            }
-          }
-        }
-        return;
+      currentFieldStep++;
+      if (step === currentFieldStep) {
+        isOnPhone = true;
       }
     }
     
-    // Step 3: Name (if enabled)
     if (formSettings.fullNameEnabled) {
-      actualStep++;
-      if (step === actualStep) {
-        if (formSettings.ssnEnabled) {
-          setStep(step + 1);
-        } else {
-          // Skip SSN, go to bank account or payment
-          if (needsBankAccount) {
-            setShowBankAccountScreen(true);
-          } else {
-            setShowPaymentScreen(true);
-          }
-        }
-        return;
+      currentFieldStep++;
+      if (step === currentFieldStep) {
+        isOnFullName = true;
       }
     }
     
-    // Step 4: SSN (if enabled)
     if (formSettings.ssnEnabled) {
-      actualStep++;
-      if (step === actualStep) {
+      currentFieldStep++;
+      if (step === currentFieldStep) {
+        isOnSSN = true;
+      }
+    }
+    
+    // Handle navigation based on current field
+    if (isOnEmail) {
+      // After email, check if phone verification is needed
+      if (formSettings.phoneEnabled && formSettings.phoneVerificationEnabled) {
+        setShowPhoneVerification(true);
+        return;
+      }
+      // Find next enabled field
+      if (formSettings.phoneEnabled) {
+        setStep(step + 1);
+      } else if (formSettings.fullNameEnabled) {
+        setStep(step + 1);
+      } else if (formSettings.ssnEnabled) {
+        setStep(step + 1);
+      } else {
+        // No more fields, go to bank/payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
         } else {
           setShowPaymentScreen(true);
         }
+      }
+      return;
+    }
+    
+    if (isOnPhone) {
+      // After phone, check if verification is needed
+      if (formSettings.phoneVerificationEnabled) {
+        setShowPhoneVerification(true);
         return;
       }
+      // Find next enabled field
+      if (formSettings.fullNameEnabled) {
+        setStep(step + 1);
+      } else if (formSettings.ssnEnabled) {
+        setStep(step + 1);
+      } else {
+        // No more fields, go to bank/payment
+        if (needsBankAccount) {
+          setShowBankAccountScreen(true);
+        } else {
+          setShowPaymentScreen(true);
+        }
+      }
+      return;
+    }
+    
+    if (isOnFullName) {
+      // After name, find next enabled field
+      if (formSettings.ssnEnabled) {
+        setStep(step + 1);
+      } else {
+        // No more fields, go to bank/payment
+        if (needsBankAccount) {
+          setShowBankAccountScreen(true);
+        } else {
+          setShowPaymentScreen(true);
+        }
+      }
+      return;
+    }
+    
+    if (isOnSSN) {
+      // Last field, go to bank/payment
+      if (needsBankAccount) {
+        setShowBankAccountScreen(true);
+      } else {
+        setShowPaymentScreen(true);
+      }
+      return;
     }
   }, [step, formSettings, needsBankAccount]);
 

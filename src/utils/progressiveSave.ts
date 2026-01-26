@@ -50,27 +50,46 @@ export async function savePartialApplication(data: PartialApplicationData): Prom
 
   try {
     // Check if application with this session_id already exists
+    // Use maybeSingle() instead of single() to avoid error if no record exists
     const { data: existing, error: checkError } = await supabase
       .from('applications')
       .select('id')
       .eq('session_id', data.sessionId)
-      .single();
+      .maybeSingle();
 
     const applicationData: Record<string, any> = {
       session_id: data.sessionId,
       status: data.status || 'in_progress',
     };
 
-    // Only include fields that have values
-    if (data.email) applicationData.email = data.email;
-    if (data.phone) applicationData.phone = data.phone;
-    if (data.fullName) applicationData.full_name = data.fullName;
-    if (data.ssn) applicationData.ssn_last_4 = data.ssn;
-    if (data.creditTier) applicationData.credit_tier = data.creditTier;
-    if (data.planMonths !== undefined) applicationData.plan_months = data.planMonths;
-    if (data.planPerPayment !== undefined) applicationData.plan_per_payment = data.planPerPayment;
-    if (data.planTotalPayments !== undefined) applicationData.plan_total_payments = data.planTotalPayments;
-    if (data.paymentFrequency) applicationData.payment_frequency = data.paymentFrequency;
+    // Only include fields that have values (all are optional for progressive saving)
+    if (data.email !== undefined && data.email !== null && data.email !== '') {
+      applicationData.email = data.email;
+    }
+    if (data.phone !== undefined && data.phone !== null && data.phone !== '') {
+      applicationData.phone = data.phone;
+    }
+    if (data.fullName !== undefined && data.fullName !== null && data.fullName !== '') {
+      applicationData.full_name = data.fullName;
+    }
+    if (data.ssn !== undefined && data.ssn !== null && data.ssn !== '') {
+      applicationData.ssn_last_4 = data.ssn;
+    }
+    if (data.creditTier !== undefined && data.creditTier !== null) {
+      applicationData.credit_tier = data.creditTier;
+    }
+    if (data.planMonths !== undefined && data.planMonths !== null) {
+      applicationData.plan_months = data.planMonths;
+    }
+    if (data.planPerPayment !== undefined && data.planPerPayment !== null) {
+      applicationData.plan_per_payment = data.planPerPayment;
+    }
+    if (data.planTotalPayments !== undefined && data.planTotalPayments !== null) {
+      applicationData.plan_total_payments = data.planTotalPayments;
+    }
+    if (data.paymentFrequency !== undefined && data.paymentFrequency !== null) {
+      applicationData.payment_frequency = data.paymentFrequency;
+    }
     
     if (data.bankAccount) {
       applicationData.bank_account_type = data.bankAccount.accountType;

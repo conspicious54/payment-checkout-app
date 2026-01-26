@@ -122,10 +122,16 @@ export function ApplicationModal({
     return currentStep;
   }, [formSettings]);
 
-  const needsBankAccount = useMemo(
-    () => (creditTier === 'below-600' || plan.months >= 6) && formSettings?.bankAccountEnabled === true,
-    [creditTier, plan.months, formSettings]
-  );
+  const needsBankAccount = useMemo(() => {
+    const result = (creditTier === 'below-600' || plan.months >= 6) && formSettings?.bankAccountEnabled === true;
+    console.log('🔍 needsBankAccount calculation:', {
+      creditTier,
+      planMonths: plan.months,
+      bankAccountEnabled: formSettings?.bankAccountEnabled,
+      result,
+    });
+    return result;
+  }, [creditTier, plan.months, formSettings]);
 
   const handleNext = useCallback(() => {
     if (!formSettings) return; // Wait for settings to load
@@ -220,7 +226,7 @@ export function ApplicationModal({
       
       // After phone, check if verification is needed
       if (formSettings.phoneVerificationEnabled) {
-        setShowPhoneVerification(true);
+      setShowPhoneVerification(true);
         return;
       }
       // Find next enabled field
@@ -258,10 +264,12 @@ export function ApplicationModal({
       
       // After name, find next enabled field
       if (formSettings.ssnEnabled) {
-        setStep(step + 1);
-      } else {
+      setStep(step + 1);
+    } else {
         // No more fields, go to bank/agreement/payment
+        console.log('🚀 Navigating from fullName step. needsBankAccount:', needsBankAccount);
         if (needsBankAccount) {
+          console.log('✅ Setting showBankAccountScreen to true');
           setShowBankAccountScreen(true);
         } else if (formSettings.agreementEnabled) {
           setShowAgreementScreen(true);
@@ -289,7 +297,9 @@ export function ApplicationModal({
       });
       
       // Last field, go to bank/agreement/payment
+      console.log('🚀 Navigating from SSN step. needsBankAccount:', needsBankAccount);
       if (needsBankAccount) {
+        console.log('✅ Setting showBankAccountScreen to true');
         setShowBankAccountScreen(true);
       } else if (formSettings.agreementEnabled) {
         setShowAgreementScreen(true);
@@ -336,7 +346,9 @@ export function ApplicationModal({
       setStep(ssnStep);
     } else {
       // No more fields, go to bank/agreement/payment
+      console.log('🚀 Navigating from phone verification. needsBankAccount:', needsBankAccount);
       if (needsBankAccount) {
+        console.log('✅ Setting showBankAccountScreen to true');
         setShowBankAccountScreen(true);
       } else if (formSettings?.agreementEnabled) {
         setShowAgreementScreen(true);
@@ -568,7 +580,7 @@ export function ApplicationModal({
             onSign={handleAgreementSign}
             onBack={handleAgreementBack}
           />
-        ) : showBankAccountScreen && needsBankAccount ? (
+        ) : showBankAccountScreen ? (
           <BankAccountStep
             bankData={bankData}
             onBankDataChange={handleBankDataChange}

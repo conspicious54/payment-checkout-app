@@ -28,6 +28,7 @@ export function ApplicationModal({
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [showBankAccountScreen, setShowBankAccountScreen] = useState(false);
   const [showAgreementScreen, setShowAgreementScreen] = useState(false);
+  const [showPaymentScreen, setShowPaymentScreen] = useState(false);
   const { isLoading, error, startLoading, stopLoading, setError } = useLoadingState();
   const [formData, setFormData] = useState({
     email: '',
@@ -57,6 +58,12 @@ export function ApplicationModal({
     timeSpentSeconds: number;
     scrollDepth: number;
   } | undefined>(undefined);
+  const [paymentData, setPaymentData] = useState({
+    cardNumber: '',
+    expDate: '',
+    cvv: '',
+    zipCode: '',
+  });
   const [formSettings, setFormSettings] = useState<FormSettings | null>(null);
   
   // Generate session ID when modal opens
@@ -341,12 +348,10 @@ export function ApplicationModal({
       });
 
       if (result.success) {
-        console.log('✅ Application submitted successfully! Redirecting to payment processor...');
+        console.log('✅ Application submitted successfully! Showing payment screen...');
         stopLoading();
-        // Close modal - payment will be handled by third-party provider
-        onClose();
-        // TODO: Redirect to payment processor URL here
-        // window.location.href = paymentProcessorUrl;
+        // Show payment screen where they can embed checkout
+        setShowPaymentScreen(true);
       } else {
         stopLoading();
         setError(result.error || 'Failed to submit application');
@@ -358,7 +363,7 @@ export function ApplicationModal({
       setError(errorMessage);
       console.error('❌ Error submitting application:', err);
     }
-  }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, showBankAccountScreen, startLoading, stopLoading, setError, onClose]);
+  }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, showBankAccountScreen, startLoading, stopLoading, setError]);
   
   const handleAgreementBack = useCallback(() => {
     // Go back to previous screen
@@ -383,6 +388,10 @@ export function ApplicationModal({
     value: string | 'checking' | 'savings'
   ) => {
     setBankData((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handlePaymentInputChange = useCallback((field: keyof typeof paymentData, value: string) => {
+    setPaymentData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   const handlePaymentInputChange = useCallback((field: keyof typeof paymentData, value: string) => {
@@ -435,11 +444,12 @@ export function ApplicationModal({
   };
 
   const progressPercentage = useMemo(() => {
-    if (showAgreementScreen) return 100;
-    if (showBankAccountScreen) return 90;
+    if (showPaymentScreen) return 100;
+    if (showAgreementScreen) return 90;
+    if (showBankAccountScreen) return 80;
     if (showPhoneVerification) return 50; // Between step 2 and 3
-    return (step / totalSteps) * 80;
-  }, [showAgreementScreen, showBankAccountScreen, showPhoneVerification, step, totalSteps]);
+    return (step / totalSteps) * 70;
+  }, [showPaymentScreen, showAgreementScreen, showBankAccountScreen, showPhoneVerification, step, totalSteps]);
 
   const handleBackdropClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -504,11 +514,58 @@ export function ApplicationModal({
               onBack={handleAgreementBack}
             />
           </>
-        ) : showAgreementScreen && !formSettings?.agreementEnabled ? (
-          // Agreement disabled, but we're here - shouldn't happen, but handle it
-          <div className="p-8 pt-16">
-            <p className="text-center text-gray-400">Processing...</p>
-          </div>
+        ) : showPaymentScreen ? (
+          <>
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                <div className="bg-[#141414] rounded-xl p-8 flex flex-col items-center gap-4">
+                  <LoadingSpinner size="lg" />
+                  <p className="text-gray-400">Processing...</p>
+                </div>
+              </div>
+            )}
+            {error && (
+              <div className="p-4 mb-4 bg-red-900/20 border border-red-500/50 rounded-lg">
+                <p className="text-red-400 text-sm" role="alert">
+                  {error}
+                </p>
+              </div>
+            )}
+            <PaymentStep
+              plan={plan}
+              paymentData={paymentData}
+              onPaymentInputChange={handlePaymentInputChange}
+              onSubmit={() => {
+                // Payment will be handled by embedded checkout
+                // This is just a placeholder - you can embed your checkout here
+                console.log('Payment step - embed your checkout here');
+              }}
+            />
+          </>
+        ) : showAgreementScreen && formSettings?.agreementEnabled ? (
+          <>
+            {isLoading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+                <div className="bg-[#141414] rounded-xl p-8 flex flex-col items-center gap-4">
+                  <LoadingSpinner size="lg" />
+                  <p className="text-gray-400">Saving your application...</p>
+                </div>
+              </div>
+            )}
+            {error && (
+              <div className="p-4 mb-4 bg-red-900/20 border border-red-500/50 rounded-lg">
+                <p className="text-red-400 text-sm" role="alert">
+                  {error}
+                </p>
+              </div>
+            )}
+            <AgreementStep
+              fullName={formData.fullName}
+              email={formData.email}
+              onSign={handleAgreementSign}
+              onBack={handleAgreementBack}
+            />
+          </>
         ) : showBankAccountScreen ? (
           <BankAccountStep
             bankData={bankData}

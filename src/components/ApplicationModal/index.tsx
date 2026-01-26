@@ -215,14 +215,12 @@ export function ApplicationModal({
       } else if (formSettings.ssnEnabled) {
         setStep(step + 1);
       } else {
-        // No more fields, go to bank/agreement/payment
+        // No more fields, go to bank account or payment
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
-        } else if (formSettings.agreementEnabled) {
-          setShowAgreementScreen(true);
         } else {
-          // No agreement, save and close immediately
-          handleFinalSubmit();
+          // Go directly to payment screen
+          setShowPaymentScreen(true);
         }
       }
       return;
@@ -355,18 +353,10 @@ export function ApplicationModal({
   }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, showBankAccountScreen, startLoading, stopLoading, setError]);
   
   const handleAgreementBack = useCallback(() => {
-    // Go back to previous screen
-    if (needsBankAccount) {
-      setShowBankAccountScreen(true);
-    } else {
-      // Go back to last form step
-      const lastStep = formSettings?.ssnEnabled ? 4 : 
-                      formSettings?.fullNameEnabled ? 3 :
-                      formSettings?.phoneEnabled ? 2 : 1;
-      setStep(lastStep);
-    }
+    // Go back to payment screen
+    setShowPaymentScreen(true);
     setShowAgreementScreen(false);
-  }, [needsBankAccount, formSettings]);
+  }, []);
 
   const handleInputChange = useCallback((field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

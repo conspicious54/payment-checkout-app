@@ -196,13 +196,6 @@ export function AgreementStep({
   const handleSign = async () => {
     if (!consentAgreed || !signatureName.trim()) return;
 
-    // Verify signature name matches full name (for legal validity)
-    const nameMatch = signatureName.trim().toLowerCase() === fullName.toLowerCase();
-    if (!nameMatch) {
-      alert('The signature name must match the full name you provided. Please enter your full legal name exactly as shown.');
-      return;
-    }
-
     // Generate agreement text hash for legal proof
     const agreementHash = await hashAgreementText(AGREEMENT_TEXT);
     

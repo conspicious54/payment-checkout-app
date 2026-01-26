@@ -504,12 +504,6 @@ export function ApplicationModal({
             <p className="text-center text-gray-400">Processing...</p>
           </div>
         ) : showBankAccountScreen ? (
-          <AgreementStep
-            fullName={formData.fullName}
-            onSign={handleAgreementSign}
-            onBack={handleAgreementBack}
-          />
-        ) : showBankAccountScreen ? (
           <BankAccountStep
             bankData={bankData}
             onBankDataChange={handleBankDataChange}

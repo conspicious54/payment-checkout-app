@@ -25,7 +25,6 @@ export function ApplicationModal({
 }: ApplicationModalProps) {
   const [step, setStep] = useState(1);
   const [showPhoneVerification, setShowPhoneVerification] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [showBankAccountScreen, setShowBankAccountScreen] = useState(false);
   const [showAgreementScreen, setShowAgreementScreen] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
@@ -36,10 +35,16 @@ export function ApplicationModal({
     fullName: '',
     ssn: '',
   });
-  const [bankData, setBankData] = useState({
+  const [bankData, setBankData] = useState<{
+    accountNumber: string;
+    routingNumber: string;
+    accountType: 'checking' | 'savings';
+    plaidAccountId?: string;
+    plaidPublicToken?: string;
+  }>({
     accountNumber: '',
     routingNumber: '',
-    accountType: 'checking' as 'checking' | 'savings',
+    accountType: 'checking',
   });
   const [paymentData, setPaymentData] = useState({
     cardNumber: '',
@@ -76,7 +81,6 @@ export function ApplicationModal({
         // Reset to step 1 when settings load to ensure correct flow
         setStep(1);
         setShowPhoneVerification(false);
-        setPhoneVerified(false);
       } else {
         console.warn('Form settings not loaded, using defaults. Check Supabase connection.');
         // Use default settings so form still works
@@ -105,8 +109,10 @@ export function ApplicationModal({
     return steps;
   }, [formSettings]);
 
-  // Calculate which step number we're on based on enabled fields
+  // Calculate which step number we're on based on enabled fields (currently unused but kept for future use)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getCurrentStepNumber = useCallback((step: number) => {
+    if (!formSettings) return 1;
     let currentStep = 0;
     if (formSettings.emailEnabled) {
       currentStep++;
@@ -264,7 +270,6 @@ export function ApplicationModal({
     // TODO: Verify code with backend API
     console.log('Verifying phone code:', code);
     // For now, just mark as verified
-    setPhoneVerified(true);
     setShowPhoneVerification(false);
     
     // Find next enabled field
@@ -358,11 +363,14 @@ export function ApplicationModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  const handleBankDataChange = useCallback((
-    field: keyof typeof bankData,
-    value: string | 'checking' | 'savings'
-  ) => {
-    setBankData((prev) => ({ ...prev, [field]: value }));
+  const handleBankDataChange = useCallback((data: {
+    accountNumber: string;
+    routingNumber: string;
+    accountType: 'checking' | 'savings';
+    plaidAccountId?: string;
+    plaidPublicToken?: string;
+  }) => {
+    setBankData(data);
   }, []);
 
   const handlePaymentInputChange = useCallback((field: keyof typeof paymentData, value: string) => {
@@ -390,6 +398,8 @@ export function ApplicationModal({
               accountType: bankData.accountType,
               routingNumber: bankData.routingNumber,
               accountNumber: bankData.accountNumber,
+              plaidAccountId: bankData.plaidAccountId,
+              plaidPublicToken: bankData.plaidPublicToken,
             }
           : undefined,
         signature: signatureData,

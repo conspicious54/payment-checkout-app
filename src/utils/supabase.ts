@@ -218,6 +218,8 @@ export interface ApplicationData {
     accountType: string;
     routingNumber: string;
     accountNumber: string;
+    plaidAccountId?: string;
+    plaidPublicToken?: string;
   };
   paymentCard?: {
     cardNumber: string; // Should be encrypted in production
@@ -273,6 +275,8 @@ export async function submitApplication(data: ApplicationData): Promise<{
       bank_account_type: data.bankAccount?.accountType,
       bank_routing_number: data.bankAccount?.routingNumber,
       bank_account_number: data.bankAccount?.accountNumber,
+      plaid_account_id: (data.bankAccount as any)?.plaidAccountId,
+      plaid_public_token: (data.bankAccount as any)?.plaidPublicToken,
       // Note: In production, card details should be processed through a payment gateway
       // and only store a token/reference, not the actual card number
       card_last_4: data.paymentCard?.cardNumber.slice(-4),

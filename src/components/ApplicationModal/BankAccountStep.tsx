@@ -56,30 +56,28 @@ interface BankAccountStepProps {
  * ```
  */
 async function getPlaidLinkToken(): Promise<string | null> {
-  // Option 1: Get from backend endpoint (recommended)
-  const backendUrl = import.meta.env.VITE_PLAID_BACKEND_URL;
-  if (backendUrl) {
-    try {
-      const response = await fetch(`${backendUrl}/api/plaid/create-link-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 'demo-user' }), // Replace with actual user ID
-      });
-      const data = await response.json();
-      return data.link_token || null;
-    } catch (error) {
-      console.error('Error fetching Link token from backend:', error);
+  // Use Netlify function endpoint
+  const netlifyFunctionUrl = '/.netlify/functions/create-link-token';
+  
+  try {
+    const response = await fetch(netlifyFunctionUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: `user-${Date.now()}` }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Error fetching Link token:', errorData);
+      throw new Error(errorData.error || 'Failed to create Link token');
     }
-  }
 
-  // Option 2: Use demo token from environment (for testing only)
-  const demoToken = import.meta.env.VITE_PLAID_DEMO_LINK_TOKEN;
-  if (demoToken) {
-    return demoToken;
+    const data = await response.json();
+    return data.link_token || null;
+  } catch (error) {
+    console.error('Error fetching Link token from Netlify function:', error);
+    return null;
   }
-
-  console.warn('No Plaid Link token available. Set VITE_PLAID_BACKEND_URL or VITE_PLAID_DEMO_LINK_TOKEN');
-  return null;
 }
 
 export function BankAccountStep({
@@ -167,29 +165,33 @@ export function BankAccountStep({
       setPlaidConnected(true);
       setError(null);
 
-      // In production, you should send the public_token to your backend
-      // to exchange it for an access_token and retrieve full account details
-      if (import.meta.env.VITE_PLAID_BACKEND_URL) {
-        fetch(`${import.meta.env.VITE_PLAID_BACKEND_URL}/api/plaid/exchange-token`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ public_token: publicToken }),
+      // Exchange public_token for access_token and get full account details
+      fetch('/.netlify/functions/exchange-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ public_token: publicToken }),
+      })
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('Failed to exchange token');
+          }
+          return res.json();
         })
-          .then(res => res.json())
-          .then(data => {
-            if (data.routing_number && data.account_number) {
-              onBankDataChange({
-                ...bankData,
-                routingNumber: data.routing_number,
-                accountNumber: data.account_number,
-              });
-            }
-          })
-          .catch(err => {
-            console.error('Error exchanging Plaid token:', err);
-            // Continue anyway - we have the account ID and mask
-          });
-      }
+        .then(data => {
+          if (data.routing_number && data.account_number) {
+            onBankDataChange({
+              accountNumber: data.account_number,
+              routingNumber: data.routing_number,
+              accountType: mapPlaidAccountType(data.account_type, data.account_subtype),
+              plaidAccountId: data.account_id,
+              plaidPublicToken: publicToken,
+            });
+          }
+        })
+        .catch(err => {
+          console.error('Error exchanging Plaid token:', err);
+          // Continue anyway - we have the account ID and mask
+        });
     } catch (err) {
       console.error('Error processing Plaid response:', err);
       setError('Failed to process bank account information. Please try again.');

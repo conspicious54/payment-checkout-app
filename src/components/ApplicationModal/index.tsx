@@ -133,7 +133,15 @@ export function ApplicationModal({
   }, [formSettings]);
 
   const needsBankAccount = useMemo(() => {
-    const result = (creditTier === 'below-600' || plan.months >= 6) && formSettings?.bankAccountEnabled === true;
+    // If bank account is disabled in settings, never show it
+    if (formSettings?.bankAccountEnabled === false) {
+      return false;
+    }
+    
+    // If bank account is enabled in settings, show it
+    // The original logic was: show for below-600 credit OR 6+ month plans
+    // But if it's enabled in settings, we should respect that setting
+    const result = formSettings?.bankAccountEnabled === true;
     console.log('🔍 needsBankAccount calculation:', {
       creditTier,
       planMonths: plan.months,

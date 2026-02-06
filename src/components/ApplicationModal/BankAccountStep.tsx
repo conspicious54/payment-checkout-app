@@ -57,25 +57,49 @@ interface BankAccountStepProps {
  */
 async function getPlaidLinkToken(): Promise<string | null> {
   // Use Netlify function endpoint
+  // In development, this will fail unless you're running netlify dev
+  // In production, this will work after deploying to Netlify
   const netlifyFunctionUrl = '/.netlify/functions/create-link-token';
   
   try {
+    console.log('🔗 Fetching Plaid Link token from:', netlifyFunctionUrl);
     const response = await fetch(netlifyFunctionUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: `user-${Date.now()}` }),
     });
 
+    console.log('📡 Response status:', response.status, response.statusText);
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Error fetching Link token:', errorData);
+      const errorText = await response.text();
+      console.error('❌ Error response:', errorText);
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { error: errorText || 'Failed to create Link token' };
+      }
+      
+      // If 404, Netlify functions aren't available (likely local dev)
+      if (response.status === 404) {
+        console.warn('⚠️ Netlify function not found. This is normal in local development.');
+        console.warn('💡 To test locally, run: npx netlify dev');
+        console.warn('💡 Or deploy to Netlify to use the functions in production.');
+        throw new Error('Netlify functions not available. Please deploy to Netlify or run "netlify dev" locally.');
+      }
+      
       throw new Error(errorData.error || 'Failed to create Link token');
     }
 
     const data = await response.json();
+    console.log('✅ Link token received:', data.link_token ? 'Token received' : 'No token');
     return data.link_token || null;
   } catch (error) {
-    console.error('Error fetching Link token from Netlify function:', error);
+    console.error('❌ Error fetching Link token from Netlify function:', error);
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+    }
     return null;
   }
 }
@@ -304,19 +328,37 @@ export function BankAccountStep({
 
       {error && (
         <div className="bg-red-900/20 border border-red-500/50 rounded-xl p-4 mb-6">
-          <p className="text-red-400 text-sm">{error}</p>
+          <p className="text-red-400 text-sm font-medium mb-2">Connection Error</p>
+          <p className="text-red-300 text-xs">{error}</p>
+          <p className="text-gray-400 text-xs mt-2">
+            {!linkToken && (
+              <>
+                <strong>Note:</strong> Netlify functions only work when deployed to Netlify or when running locally with <code className="bg-gray-800 px-1 rounded">netlify dev</code>.
+                Make sure you've set the Plaid environment variables in Netlify and redeployed.
+              </>
+            )}
+          </p>
         </div>
       )}
 
       <div className="space-y-4 mb-6">
-            <button
+        <button
           onClick={handleConnectBank}
           disabled={!ready || !linkToken}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-800 disabled:text-gray-600 text-white font-semibold py-4 rounded-xl transition-all disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
           <Lock className="w-5 h-5" />
-          {ready ? 'Connect Bank Account with Plaid' : 'Initializing...'}
-            </button>
+          {!linkToken ? 'Waiting for connection...' : ready ? 'Connect Bank Account with Plaid' : 'Initializing...'}
+        </button>
+        
+        {!linkToken && !isLoadingToken && (
+          <div className="bg-yellow-900/20 border border-yellow-500/50 rounded-xl p-3">
+            <p className="text-yellow-400 text-xs">
+              <strong>Development Mode:</strong> Plaid Link requires Netlify functions. 
+              Deploy to Netlify or run <code className="bg-gray-800 px-1 rounded">npx netlify dev</code> to test locally.
+            </p>
+          </div>
+        )}
 
         <div className="bg-[#0a0a0a] rounded-xl p-4 border border-blue-900/30">
           <div className="flex gap-3">

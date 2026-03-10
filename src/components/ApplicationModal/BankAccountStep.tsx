@@ -249,7 +249,7 @@ export function BankAccountStep({
     return (
       <div className="p-8 pt-16">
         <div className="flex items-center justify-center mb-8">
-          <img src="/divvylogo.png" alt="Divvy" className="h-8" />
+          <img src="/Logo-E1.png" alt="Divvy" className="h-8" />
         </div>
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
@@ -263,7 +263,7 @@ export function BankAccountStep({
     return (
       <div className="p-8 pt-16">
         <div className="flex items-center justify-center mb-8">
-          <img src="/divvylogo.png" alt="Divvy" className="h-8" />
+          <img src="/Logo-E1.png" alt="Divvy" className="h-8" />
         </div>
 
         <div className="text-center mb-8">
@@ -314,7 +314,7 @@ export function BankAccountStep({
   return (
     <div className="p-8 pt-16">
       <div className="flex items-center justify-center mb-8">
-        <img src="/divvylogo.png" alt="Divvy" className="h-8" />
+        <img src="/Logo-E1.png" alt="Divvy" className="h-8" />
       </div>
 
       <div className="text-center mb-8">

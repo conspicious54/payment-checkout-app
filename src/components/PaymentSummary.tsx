@@ -109,7 +109,7 @@ export function PaymentSummary({
         aria-label="Start application with Divvy"
       >
         <span>Pay with</span>
-        <img src="/divvylogo.png" alt="Divvy" className="h-6" />
+        <img src="/Logo-E1.png" alt="Divvy" className="h-6" />
       </button>
 
       <p className="text-gray-500 text-xs text-center leading-relaxed">

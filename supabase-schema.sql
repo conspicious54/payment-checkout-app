@@ -11,7 +11,7 @@
 CREATE TABLE IF NOT EXISTS payment_plans (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   credit_tier TEXT NOT NULL CHECK (credit_tier IN ('700+', '600-700', 'below-600')),
-  months INTEGER NOT NULL CHECK (months IN (2, 3, 6)),
+  months INTEGER NOT NULL CHECK (months IN (2, 3, 6, 12, 18)),
   base_amount DECIMAL(10, 2) NOT NULL DEFAULT 5997.00,
   interest_rate DECIMAL(5, 4) NOT NULL, -- e.g., 0.0350 for 3.5%
   per_payment DECIMAL(10, 2) NOT NULL,
@@ -135,18 +135,24 @@ CREATE POLICY "Applications are viewable by service role only"
 
 -- 700+ and 600-700 Credit Tiers (same rates)
 INSERT INTO payment_plans (credit_tier, months, base_amount, interest_rate, per_payment, total_payments, total_amount, display_order) VALUES
-  ('700+', 6, 5997.00, 0.1000, 1099.45, 6, 6596.70, 1),
-  ('700+', 3, 5997.00, 0.0500, 2098.95, 3, 6296.85, 2),
-  ('700+', 2, 5997.00, 0.0000, 2998.50, 2, 5997.00, 3),
-  ('600-700', 6, 5997.00, 0.1000, 1099.45, 6, 6596.70, 1),
-  ('600-700', 3, 5997.00, 0.0500, 2098.95, 3, 6296.85, 2),
-  ('600-700', 2, 5997.00, 0.0000, 2998.50, 2, 5997.00, 3);
+  ('700+', 18, 5997.00, 0.3000, 433.12, 18, 7796.16, 1),
+  ('700+', 12, 5997.00, 0.2000, 599.70, 12, 7196.40, 2),
+  ('700+', 6, 5997.00, 0.1000, 1099.45, 6, 6596.70, 3),
+  ('700+', 3, 5997.00, 0.0500, 2098.95, 3, 6296.85, 4),
+  ('700+', 2, 5997.00, 0.0000, 2998.50, 2, 5997.00, 5),
+  ('600-700', 18, 5997.00, 0.3000, 433.12, 18, 7796.16, 1),
+  ('600-700', 12, 5997.00, 0.2000, 599.70, 12, 7196.40, 2),
+  ('600-700', 6, 5997.00, 0.1000, 1099.45, 6, 6596.70, 3),
+  ('600-700', 3, 5997.00, 0.0500, 2098.95, 3, 6296.85, 4),
+  ('600-700', 2, 5997.00, 0.0000, 2998.50, 2, 5997.00, 5);
 
--- Below-600 Credit Tier (2% extra interest)
+-- Below-600 Credit Tier (2% extra)
 INSERT INTO payment_plans (credit_tier, months, base_amount, interest_rate, per_payment, total_payments, total_amount, display_order) VALUES
-  ('below-600', 6, 5997.00, 0.1200, 1119.44, 6, 6716.64, 1),
-  ('below-600', 3, 5997.00, 0.0700, 2138.93, 3, 6416.79, 2),
-  ('below-600', 2, 5997.00, 0.0200, 3058.47, 2, 6116.94, 3);
+  ('below-600', 18, 5997.00, 0.3200, 439.78, 18, 7916.04, 1),
+  ('below-600', 12, 5997.00, 0.2200, 609.70, 12, 7316.40, 2),
+  ('below-600', 6, 5997.00, 0.1200, 1119.44, 6, 6716.64, 3),
+  ('below-600', 3, 5997.00, 0.0700, 2138.93, 3, 6416.79, 4),
+  ('below-600', 2, 5997.00, 0.0200, 3058.47, 2, 6116.94, 5);
 
 -- ============================================
 -- 6. HELPER VIEW: Active Plans by Tier

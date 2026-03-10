@@ -1,4 +1,4 @@
-import { PRODUCT_NAME, PRODUCT_SUBTITLE, CreditTier, creditTierLabels } from '../constants';
+import { CreditTier, creditTierLabels } from '../constants';
 
 interface HeaderProps {
   creditTier: CreditTier;
@@ -11,18 +11,11 @@ export function Header({ creditTier, onCreditTierChange }: HeaderProps) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div 
-            className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 font-medium"
-            aria-label="Product logo"
-          >
-            PP
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">{PRODUCT_NAME}</h1>
-            <p className="text-gray-500 text-sm">{PRODUCT_SUBTITLE}</p>
-          </div>
-        </div>
+        <img
+          src="/ppf-logo.png"
+          alt="PPF Accelerator"
+          className="h-12"
+        />
 
         <div className="flex gap-2" role="tablist" aria-label="Credit tier selection">
           {tiers.map((tier) => (

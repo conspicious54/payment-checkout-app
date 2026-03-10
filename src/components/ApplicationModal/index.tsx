@@ -28,6 +28,7 @@ export function ApplicationModal({
   const [showBankAccountScreen, setShowBankAccountScreen] = useState(false);
   const [showAgreementScreen, setShowAgreementScreen] = useState(false);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false);
   const { isLoading, error, startLoading, stopLoading, setError } = useLoadingState();
   const [formData, setFormData] = useState({
     email: '',
@@ -410,6 +411,7 @@ export function ApplicationModal({
   };
 
   const progressPercentage = useMemo(() => {
+    if (showSuccessScreen) return 100;
     if (showPaymentScreen) return 100;
     if (showAgreementScreen) return 90;
     if (showBankAccountScreen) return 80;
@@ -456,7 +458,29 @@ export function ApplicationModal({
           />
         </div>
 
-        {showBankAccountScreen ? (
+        {showSuccessScreen ? (
+          <div className="p-8 pt-16 text-center">
+            <div className="flex items-center justify-center mb-8">
+              <img src="/Logo-E1.png" alt="Divvy" className="h-8 brightness-0 invert" />
+            </div>
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 flex items-center justify-center">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Payment Successful!</h2>
+            <p className="text-gray-400 mb-2">Your payment went through successfully.</p>
+            <p className="text-gray-500 text-sm mb-10">A confirmation has been sent to {formData.email || 'your email'}.</p>
+            <button
+              onClick={onClose}
+              className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 hover:opacity-90 text-white font-semibold py-4 rounded-xl transition-all"
+            >
+              Done
+            </button>
+          </div>
+        ) : showBankAccountScreen ? (
           <BankAccountStep
             bankData={bankData}
             onBankDataChange={handleBankDataChange}
@@ -485,7 +509,7 @@ export function ApplicationModal({
               onPaymentInputChange={handlePaymentInputChange}
               onSubmit={() => {
                 setShowPaymentScreen(false);
-                setShowAgreementScreen(true);
+                setShowSuccessScreen(true);
               }}
             />
           </>

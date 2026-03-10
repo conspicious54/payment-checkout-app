@@ -14,7 +14,7 @@ export function Header({ creditTier, onCreditTierChange }: HeaderProps) {
         <img
           src="/ppf-logo.png"
           alt="PPF Accelerator"
-          className="h-20"
+          className="h-28"
         />
 
         <div className="flex gap-2" role="tablist" aria-label="Credit tier selection">

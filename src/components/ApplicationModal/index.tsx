@@ -306,46 +306,37 @@ export function ApplicationModal({
   
   const handleAgreementSign = useCallback(async (sigData: typeof signatureData) => {
     setSignatureData(sigData);
-    // Save all data when agreement is signed
-    startLoading();
-    
-    try {
-      const result = await submitApplication({
-        sessionId,
-        email: formData.email,
-        phone: formData.phone,
-        fullName: formData.fullName,
-        ssn: formData.ssn,
-        creditTier,
-        planMonths: plan.months,
-        planPerPayment: plan.perPayment,
-        planTotalPayments: plan.totalPayments,
-        paymentFrequency,
-        bankAccount: showBankAccountScreen ? {
-          accountType: bankData.accountType,
-          routingNumber: bankData.routingNumber,
-          accountNumber: bankData.accountNumber,
-        } : undefined,
-        signature: sigData,
-      });
-
+    // Try to save to Supabase but don't block the user if it fails
+    submitApplication({
+      sessionId,
+      email: formData.email,
+      phone: formData.phone,
+      fullName: formData.fullName,
+      ssn: formData.ssn,
+      creditTier,
+      planMonths: plan.months,
+      planPerPayment: plan.perPayment,
+      planTotalPayments: plan.totalPayments,
+      paymentFrequency,
+      bankAccount: showBankAccountScreen ? {
+        accountType: bankData.accountType,
+        routingNumber: bankData.routingNumber,
+        accountNumber: bankData.accountNumber,
+      } : undefined,
+      signature: sigData,
+    }).then(result => {
       if (result.success) {
-        console.log('✅ Application submitted successfully! Showing payment screen...');
-        stopLoading();
-        // Show payment screen where they can embed checkout
-        setShowPaymentScreen(true);
+        console.log('✅ Application saved to database.');
       } else {
-        stopLoading();
-        setError(result.error || 'Failed to submit application');
-        console.error('❌ Failed to submit application:', result.error);
+        console.warn('⚠️ Could not save to database:', result.error);
       }
-    } catch (err) {
-      stopLoading();
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
-      setError(errorMessage);
-      console.error('❌ Error submitting application:', err);
-    }
-  }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, showBankAccountScreen, startLoading, stopLoading, setError]);
+    }).catch(err => {
+      console.warn('⚠️ Database save failed:', err);
+    });
+    // Always advance to payment step regardless of DB result
+    setShowAgreementScreen(false);
+    setShowPaymentScreen(true);
+  }, [sessionId, formData, bankData, creditTier, plan, paymentFrequency, showBankAccountScreen]);
   
   const handleAgreementBack = useCallback(() => {
     // Go back to payment screen

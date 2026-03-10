@@ -351,14 +351,12 @@ export function BankAccountStep({
           {!linkToken ? 'Waiting for connection...' : ready ? 'Connect Bank Account with Plaid' : 'Initializing...'}
         </button>
         
-        {!linkToken && !isLoadingToken && (
-          <div className="bg-yellow-900/20 border border-yellow-500/50 rounded-xl p-3">
-            <p className="text-yellow-400 text-xs">
-              <strong>Development Mode:</strong> Plaid Link requires Netlify functions. 
-              Deploy to Netlify or run <code className="bg-gray-800 px-1 rounded">npx netlify dev</code> to test locally.
-            </p>
-          </div>
-        )}
+        <button
+          onClick={onNext}
+          className="w-full text-gray-500 hover:text-gray-300 text-sm py-2 transition-colors"
+        >
+          Skip for now →
+        </button>
 
         <div className="bg-[#0a0a0a] rounded-xl p-4 border border-blue-900/30">
           <div className="flex gap-3">

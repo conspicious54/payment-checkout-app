@@ -507,17 +507,12 @@ export function ApplicationModal({
               paymentData={paymentData}
               onPaymentInputChange={handlePaymentInputChange}
               onSubmit={() => {
-                // After payment info is entered, go to agreement
-                if (formSettings?.agreementEnabled) {
-                  setShowAgreementScreen(true);
-                } else {
-                  // If agreement is disabled, save and close immediately
-                  handleFinalSubmit();
-                }
+                setShowPaymentScreen(false);
+                setShowAgreementScreen(true);
               }}
             />
           </>
-        ) : showAgreementScreen && formSettings?.agreementEnabled ? (
+        ) : showAgreementScreen ? (
           <>
             {isLoading && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">

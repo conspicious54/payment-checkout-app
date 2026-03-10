@@ -314,7 +314,7 @@ export function ApplicationModal({
   }, [formData.phone]);
 
   const handleBankAccountNext = useCallback(() => {
-    // Go to payment screen after bank account
+    setShowBankAccountScreen(false);
     setShowPaymentScreen(true);
   }, []);
   

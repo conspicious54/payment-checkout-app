@@ -238,7 +238,7 @@ export function AgreementStep({
   return (
     <div className="p-8 pt-16">
       <div className="flex items-center justify-center mb-8">
-        <img src="/Logo-E1.png" alt="Divvy" className="h-8" />
+        <img src="/Logo-E1.png" alt="Divvy" className="h-8 brightness-0 invert" />
       </div>
 
       <div className="text-center mb-8">

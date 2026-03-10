@@ -23,11 +23,11 @@ export function PaymentSummary({
       <div className="flex items-start justify-between mb-8 pb-8 border-b border-gray-800">
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div 
-              className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400 font-medium"
+            <div
+              className="w-12 h-12 bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden"
               aria-label="Product logo"
             >
-              PP
+              <img src="/ppf-logo.png" alt="PPF" className="w-full h-full object-contain p-1" />
             </div>
             <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-xs">
               1

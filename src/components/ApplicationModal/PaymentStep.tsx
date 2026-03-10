@@ -86,12 +86,12 @@ export function PaymentStep({
             <input
               id="cardNumber"
               type="text"
-              value={paymentData.cardNumber}
+              value={paymentData.cardNumber.replace(/(.{4})/g, '$1 ').trim()}
               onChange={(e) => handleInputChange('cardNumber', e.target.value.replace(/\D/g, '').slice(0, 16))}
               onBlur={() => setTouched((prev) => ({ ...prev, cardNumber: true }))}
               onKeyDown={handleKeyDown}
               placeholder="1234 5678 9012 3456"
-              maxLength={16}
+              maxLength={19}
               className={`w-full bg-[#0a0a0a] border rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none transition-colors ${
                 touched.cardNumber && validation.errors.cardNumber ? 'border-red-500' : 'border-gray-800 focus:border-blue-500'
               }`}

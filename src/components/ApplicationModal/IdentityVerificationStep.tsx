@@ -278,7 +278,7 @@ export function IdentityVerificationStep({
         onClick={onNext}
         onKeyDown={handleKeyDown}
         disabled={!isStepValid}
-        className="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:text-gray-600 text-white font-semibold py-4 rounded-xl transition-all disabled:cursor-not-allowed"
+        className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition-all"
         aria-label={step === totalSteps ? (needsBankAccount ? 'Continue to Bank Account' : 'Continue to Payment') : 'Continue to next step'}
       >
         {step === totalSteps

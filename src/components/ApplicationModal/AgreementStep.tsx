@@ -154,6 +154,7 @@ export function AgreementStep({
       
       if (scrollHeight <= clientHeight) {
         setIsAtBottom(true);
+        setMaxScrollDepth(100);
       }
     };
 
@@ -366,8 +367,7 @@ export function AgreementStep({
           </div>
 
           <p className="text-gray-500 text-xs text-center">
-            Time spent reviewing: {Math.floor(timeSpent / 60)}m {timeSpent % 60}s | 
-            Scroll depth: {maxScrollDepth}%
+            Your signature is legally binding and will be recorded with a timestamp for your records.
           </p>
         </div>
       )}

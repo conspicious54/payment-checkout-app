@@ -207,11 +207,8 @@ export function ApplicationModal({
         // No more fields, go to bank/agreement
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
-        } else if (formSettings.agreementEnabled) {
-          setShowAgreementScreen(true);
         } else {
-          // No agreement, save and close immediately
-          handleFinalSubmit();
+          setShowAgreementScreen(true);
         }
       }
       return;
@@ -233,13 +230,12 @@ export function ApplicationModal({
         if (needsBankAccount) {
           setShowBankAccountScreen(true);
         } else {
-          // Go directly to payment screen
-          setShowPaymentScreen(true);
+          setShowAgreementScreen(true);
         }
       }
       return;
     }
-    
+
     if (isOnFullName) {
       // After name, find next enabled field
       if (formSettings.ssnEnabled) {
@@ -248,27 +244,19 @@ export function ApplicationModal({
         // No more fields, go to bank/agreement/payment
         console.log('🚀 Navigating from fullName step. needsBankAccount:', needsBankAccount);
         if (needsBankAccount) {
-          console.log('✅ Setting showBankAccountScreen to true');
           setShowBankAccountScreen(true);
-        } else if (formSettings.agreementEnabled) {
-          setShowAgreementScreen(true);
         } else {
-          // No agreement, save and close immediately
-          handleFinalSubmit();
+          setShowAgreementScreen(true);
         }
       }
       return;
     }
     
     if (isOnSSN) {
-      // Last field, go to bank account or payment
-      console.log('🚀 Navigating from SSN step. needsBankAccount:', needsBankAccount);
       if (needsBankAccount) {
-        console.log('✅ Setting showBankAccountScreen to true');
         setShowBankAccountScreen(true);
       } else {
-        // Go directly to payment screen
-        setShowPaymentScreen(true);
+        setShowAgreementScreen(true);
       }
       return;
     }
@@ -298,11 +286,9 @@ export function ApplicationModal({
       // No more fields, go to bank account or payment
       console.log('🚀 Navigating from phone verification. needsBankAccount:', needsBankAccount);
       if (needsBankAccount) {
-        console.log('✅ Setting showBankAccountScreen to true');
         setShowBankAccountScreen(true);
       } else {
-        // Go directly to payment screen
-        setShowPaymentScreen(true);
+        setShowAgreementScreen(true);
       }
     }
   }, [sessionId, formData, creditTier, plan, paymentFrequency, formSettings, needsBankAccount]);
@@ -315,7 +301,7 @@ export function ApplicationModal({
 
   const handleBankAccountNext = useCallback(() => {
     setShowBankAccountScreen(false);
-    setShowPaymentScreen(true);
+    setShowAgreementScreen(true);
   }, []);
   
   const handleAgreementSign = useCallback(async (sigData: typeof signatureData) => {

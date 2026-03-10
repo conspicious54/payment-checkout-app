@@ -221,7 +221,7 @@ export function AgreementStep({
     onSign(signatureData);
   };
 
-  const canSign = consentAgreed && signatureName.trim().length > 0 && isAtBottom && maxScrollDepth >= 90;
+  const canSign = consentAgreed && signatureName.trim().length > 0 && isAtBottom;
 
   const handleDownloadAgreement = () => {
     const blob = new Blob([AGREEMENT_TEXT], { type: 'text/plain' });

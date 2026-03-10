@@ -279,12 +279,12 @@ export function IdentityVerificationStep({
         onKeyDown={handleKeyDown}
         disabled={!isStepValid}
         className="w-full bg-gradient-to-r from-cyan-400 via-blue-500 to-pink-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition-all"
-        aria-label={step === totalSteps ? (needsBankAccount ? 'Continue to Bank Account' : 'Continue to Payment') : 'Continue to next step'}
+        aria-label={step === totalSteps ? (needsBankAccount ? 'Continue to Bank Account' : 'Continue to Agreement') : 'Continue to next step'}
       >
         {step === totalSteps
           ? needsBankAccount && formSettings.bankAccountEnabled
             ? 'Continue to Bank Account'
-            : 'Continue to Payment'
+            : 'Continue to Agreement'
           : 'Continue'}
       </button>
 

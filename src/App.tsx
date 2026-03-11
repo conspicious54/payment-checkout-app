@@ -12,6 +12,8 @@ import { creditTierPlans } from './constants';
 import { adjustPlanForFrequency, calculateTotalAmount } from './utils/paymentCalculations';
 import { generatePaymentDates } from './utils/dateUtils';
 import { fetchAllPaymentPlans } from './utils/supabase';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { TermsOfServiceModal } from './components/TermsOfServiceModal';
 
 function App() {
   const [creditTier, setCreditTier] = useState<CreditTier>('700+');
@@ -21,6 +23,8 @@ function App() {
   const [paymentFrequency, setPaymentFrequency] = useState<PaymentFrequency>('monthly');
   const [plansByTier, setPlansByTier] = useState<Record<CreditTier, PaymentPlan[]>>(creditTierPlans);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   // Fetch plans from database on mount
   useEffect(() => {
@@ -139,6 +143,36 @@ function App() {
             onClose={handleApplicationClose}
           />
         )}
+
+      {showPrivacyPolicy && (
+        <PrivacyPolicyModal onClose={() => setShowPrivacyPolicy(false)} />
+      )}
+
+      {showTerms && (
+        <TermsOfServiceModal onClose={() => setShowTerms(false)} />
+      )}
+
+      <footer className="border-t border-gray-800 mt-16">
+        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-gray-600 text-xs">
+            &copy; {new Date().getFullYear()} Dopamine Solutions LLC. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setShowPrivacyPolicy(true)}
+              className="text-gray-500 hover:text-gray-300 text-xs transition-colors"
+            >
+              Privacy Policy
+            </button>
+            <button
+              onClick={() => setShowTerms(true)}
+              className="text-gray-500 hover:text-gray-300 text-xs transition-colors"
+            >
+              Terms of Service
+            </button>
+          </div>
+        </div>
+      </footer>
       </div>
     </ErrorBoundary>
   );
